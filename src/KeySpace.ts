@@ -40,7 +40,9 @@ export namespace KeySpace {
 
 	export type GetIndexKeyValueParams<K extends KeySpace, Index extends K['indexes'][number]> = Remap<
 		GetIndexKeyValueParamsMap<K>[Index]
-	>;
+	> extends never
+		? undefined
+		: Remap<GetIndexKeyValueParamsMap<K>[Index]>;
 
 	export type GetIndexHashKeyValueParamsMap<K extends KeySpace> = {
 		[x in K['indexes'][number]]: GetIndexValueParamsMap<K>[x][Table.GetIndexHashKey<K['Table'], x>];

@@ -162,7 +162,7 @@ it('combines params without never', () => {
 });
 
 it('combines params without never', () => {
-	const check: A.Equals<Parameters<typeof NoGsiNeverParamsKeySpace.keyOf>[0], never> = 1;
+	const check: A.Equals<Parameters<typeof NoGsiNeverParamsKeySpace.keyOf>[0], undefined> = 1;
 
 	expect(check).toBe(1);
 });

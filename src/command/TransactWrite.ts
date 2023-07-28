@@ -21,8 +21,9 @@ const TRANSACT_WRITE_COMMAND_OUTPUT_HOOK = [
 	TRANSACT_WRITE_COMMAND_OUTPUT_DATA_TYPE
 ] as const;
 
-export interface DkTransactWriteCommandInputConditionCheck<Key extends GenericAttributes = GenericAttributes>
-	extends LowerCaseObjectKeys<Omit<ConditionCheck, 'Key'>> {
+export interface DkTransactWriteCommandInputConditionCheck<
+	Key extends GenericAttributes | undefined = GenericAttributes
+> extends LowerCaseObjectKeys<Omit<ConditionCheck, 'Key'>> {
 	type: 'conditionCheck';
 	key: Key;
 }
@@ -33,13 +34,13 @@ export interface DkTransactWriteCommandInputPut<Attributes extends GenericAttrib
 	item: Attributes;
 }
 
-export interface DkTransactWriteCommandInputDelete<Key extends GenericAttributes = GenericAttributes>
+export interface DkTransactWriteCommandInputDelete<Key extends GenericAttributes | undefined = GenericAttributes>
 	extends LowerCaseObjectKeys<Omit<Delete, 'Key'>> {
 	type: 'delete';
 	key: Key;
 }
 
-export interface DkTransactWriteCommandInputUpdate<Key extends GenericAttributes = GenericAttributes>
+export interface DkTransactWriteCommandInputUpdate<Key extends GenericAttributes | undefined = GenericAttributes>
 	extends LowerCaseObjectKeys<Omit<Update, 'Key'>> {
 	type: 'update';
 	key: Key;

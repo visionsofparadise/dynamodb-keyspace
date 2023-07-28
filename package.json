@@ -1,7 +1,7 @@
 {
 	"name": "dynamodb-keyspace",
-	"description": "Commands and utilities for better, more scalable DynamoDB usage.",
-	"version": "0.0.1",
+	"description": "Utilities for aws-sdk-v3 DynamoDB client that provide better typescript support and APIs for scalable usage.",
+	"version": "0.0.2",
 	"main": "./dist-cjs/index.js",
 	"module": "./dist-es/index.js",
 	"types": "./dist-types/index.d.ts",
@@ -50,6 +50,12 @@
 		"name": "xKore",
 		"url": "https://www.mattcavender.com"
 	},
+	"keywords": [
+		"dynamodb",
+		"aws-sdk",
+		"aws-sdk-v3",
+		"typescript"
+	],
 	"license": "MIT",
 	"homepage": "https://github.com/visionsofparadise/dynamodb-keyspace#readme",
 	"repository": {
