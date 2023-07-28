@@ -27,7 +27,9 @@ export const queryQuickTableItems = async <
 	input: QueryQuickItemsInput<
 		Index & string,
 		Table.GetIndexCursorKey<T, Index & string>,
-		Table.GetIndexKey<T, string & Index>[T['config']['indexes'][Index & string]['hash']['key']]
+		Index extends string
+			? Table.GetIndexKey<T, Index>[T['config']['indexes'][Index]['hash']['key']]
+			: Table.GetIndexKey<T, T['primaryIndex']>[T['config']['indexes'][T['primaryIndex']]['hash']['key']]
 	>,
 	dkClient: DkClient = Table.dkClient
 ): Promise<QueryQuickItemsOutput<Table.GetAttributes<T>, Table.GetIndexCursorKey<T, Index & string>>> => {
@@ -67,7 +69,9 @@ export const queryQuickItems = async <
 	input: QueryQuickItemsInput<
 		Index,
 		Table.GetIndexCursorKey<K['Table'], Index>,
-		KeySpace.GetIndexHashKeyValueParamsMap<K>[Index extends string ? Index : K['primaryIndex']]
+		Index extends string
+			? KeySpace.GetIndexHashKeyValueParamsMap<K>[Index]
+			: KeySpace.GetIndexHashKeyValueParamsMap<K>[K['primaryIndex']]
 	>
 ): Promise<QueryQuickItemsOutput<KeySpace.GetAttributes<K>, Table.GetIndexCursorKey<K['Table'], Index>>> => {
 	const index = input.index || primaryIndex;
