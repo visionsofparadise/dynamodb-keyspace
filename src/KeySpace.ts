@@ -30,12 +30,14 @@ export namespace KeySpace {
 
 	export type GetIndexValueParamsMap<K extends KeySpace> = {
 		[x in K['indexes'][number]]: {
-			[y in keyof K['indexValueHandlers'][x]]: Exclude<Parameters<K['indexValueHandlers'][x][y]>[0], undefined | never>;
+			[y in keyof K['indexValueHandlers'][x]]: Parameters<K['indexValueHandlers'][x][y]>[0];
 		};
 	};
 
 	export type GetIndexKeyValueParamsMap<K extends KeySpace> = {
-		[x in K['indexes'][number]]: U.IntersectOf<GetIndexValueParamsMap<K>[x][keyof GetIndexValueParamsMap<K>[x]]>;
+		[x in K['indexes'][number]]: U.IntersectOf<
+			Exclude<GetIndexValueParamsMap<K>[x][keyof GetIndexValueParamsMap<K>[x]], undefined>
+		>;
 	};
 
 	export type GetIndexKeyValueParams<K extends KeySpace, Index extends K['indexes'][number]> = Remap<
@@ -52,7 +54,7 @@ export namespace KeySpace {
 export type IndexValueHandlersType<
 	ParentTable extends Table = Table,
 	Attributes extends GenericAttributes = GenericAttributes,
-	SecondaryIndex extends ParentTable['secondaryIndexes'][number] | never = never
+	SecondaryIndex extends ParentTable['secondaryIndexes'][number] = never
 > = {
 	[x in string & Exclude<PrimaryIndex | SecondaryIndex, never>]: {
 		[y in keyof Table.GetIndexKey<ParentTable, x>]: (params: Attributes) => Table.GetIndexKey<ParentTable, x>[y];
@@ -62,7 +64,7 @@ export type IndexValueHandlersType<
 export interface KeySpaceConfig<
 	ParentTable extends Table = Table,
 	Attributes extends GenericAttributes = GenericAttributes,
-	SecondaryIndex extends ParentTable['secondaryIndexes'][number] | never = never,
+	SecondaryIndex extends ParentTable['secondaryIndexes'][number] = never,
 	IndexValueHandlers extends IndexValueHandlersType<ParentTable, Attributes, SecondaryIndex> = any
 > extends Partial<DkClientConfig> {
 	indexValueHandlers: IndexValueHandlers;
@@ -71,7 +73,7 @@ export interface KeySpaceConfig<
 export class KeySpace<
 	ParentTable extends Table = any,
 	Attributes extends GenericAttributes = GenericAttributes,
-	SecondaryIndex extends ParentTable['secondaryIndexes'][number] | never = any,
+	SecondaryIndex extends ParentTable['secondaryIndexes'][number] = any,
 	IndexValueHandlers extends IndexValueHandlersType<ParentTable, Attributes, SecondaryIndex> = any
 > {
 	client: DynamoDBDocumentClient;
@@ -103,9 +105,9 @@ export class KeySpace<
 		return new KeySpace<ParentTable, Attributes, SecondaryIndex, ConfigIndexValueHandlers>(this.Table, config);
 	}
 
-	get indexes(): Array<this['Table']['primaryIndex'] | Exclude<SecondaryIndex, never>> {
+	get indexes(): Array<Exclude<this['Table']['primaryIndex'] | SecondaryIndex, never>> {
 		return Object.keys(this.indexValueHandlers).filter(
-			(index): index is this['Table']['primaryIndex'] | Exclude<SecondaryIndex, never> =>
+			(index): index is Exclude<this['Table']['primaryIndex'] | SecondaryIndex, never> =>
 				this.Table.indexes.includes(index)
 		);
 	}
@@ -114,10 +116,8 @@ export class KeySpace<
 		return this.Table.primaryIndex;
 	}
 
-	get secondaryIndexes(): Array<Exclude<this['indexes'][number], this['primaryIndex']>> {
-		return this.indexes.filter(
-			(index): index is Exclude<this['indexes'][number], this['primaryIndex']> => index !== this.primaryIndex
-		);
+	get secondaryIndexes(): Array<SecondaryIndex> {
+		return this.indexes.filter((index): index is SecondaryIndex => index !== this.primaryIndex);
 	}
 
 	indexAttributeKeys = <Index extends this['indexes'][number]>(

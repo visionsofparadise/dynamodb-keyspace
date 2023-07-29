@@ -96,7 +96,7 @@ export interface PrimaryIndexConfig<
 	sort?: IndexAttributeConfig<SortKey, SortValue>;
 }
 
-export type IndexProjection<Attributes extends string> = never | never[] | Attributes[];
+export type IndexProjection<Attributes extends string> = undefined | never[] | Attributes[];
 
 export interface SecondaryIndexConfig<
 	HashKey extends string = string,
@@ -170,7 +170,7 @@ export class Table<
 
 		return class TableKeySpace<
 			Attributes extends GenericAttributes = GenericAttributes,
-			SecondaryIndex extends (typeof ParentTable)['secondaryIndexes'][number] | never = never
+			SecondaryIndex extends (typeof ParentTable)['secondaryIndexes'][number] = never
 		> extends KeySpace<typeof ParentTable, Attributes, SecondaryIndex> {
 			constructor() {
 				super(ParentTable, {} as any);

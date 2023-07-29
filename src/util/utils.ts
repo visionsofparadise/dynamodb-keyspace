@@ -41,3 +41,5 @@ export type Remap<T> = T extends object
 			[K in keyof T]: K extends keyof T ? T[K] : never;
 	  }
 	: never;
+
+export type NotNever<A1, A2> = A1 extends never ? A2 : A1;

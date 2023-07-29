@@ -1,4 +1,4 @@
-import { DocumentClient, TABLE_NAME } from '../TableTest.dev';
+import { DocumentClient, ManyGsiTable, TABLE_NAME } from '../TableTest.dev';
 import { PutCommand } from '@aws-sdk/lib-dynamodb';
 import { queryQuickItems } from './queryQuick';
 import { TestItem, ManyGsiKeySpace } from '../KeySpaceTest.dev';
@@ -90,4 +90,49 @@ it('queries items with between on index key', async () => {
 	});
 
 	expect(result.items.length).toBe(7);
+});
+
+it('gets hashKey params for primary index on no index defined and index', async () => {
+	interface TestItem2 {
+		string1: string;
+		number1: number;
+		string2: string;
+		number2: number;
+	}
+
+	const DifferentParamsKeySpace = new ManyGsiTable.KeySpace<TestItem2, 'gsi0' | 'gsi1'>().configure({
+		indexValueHandlers: {
+			primaryIndex: {
+				pk: (params: Pick<TestItem2, 'string1'>) => params.string1,
+				sk: (params: Pick<TestItem2, 'number1'>) => `${params.number1}`
+			},
+			gsi0: {
+				gsi0Pk: (params: Pick<TestItem2, 'number2'>) => `${params.number2}`,
+				gsi0Sk: (params: Pick<TestItem2, 'string2'>) => params.string2
+			},
+			gsi1: {
+				gsi1Pk: () => 1,
+				gsi1Sk: () => 1
+			}
+		}
+	});
+
+	const string1 = randomString();
+	const number2 = randomNumber();
+
+	await queryQuickItems(DifferentParamsKeySpace, {
+		hashKeyParams: { string1 }
+	});
+
+	await queryQuickItems(DifferentParamsKeySpace, {
+		index: 'gsi0' as const,
+		hashKeyParams: { number2 }
+	});
+
+	await queryQuickItems(DifferentParamsKeySpace, {
+		index: 'gsi1' as const,
+		hashKeyParams: undefined
+	});
+
+	expect(true).toBe(true);
 });

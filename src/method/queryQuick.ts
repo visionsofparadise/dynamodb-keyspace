@@ -27,7 +27,7 @@ export const queryQuickTableItems = async <
 	input: QueryQuickItemsInput<
 		Index & string,
 		Table.GetIndexCursorKey<T, Index & string>,
-		Index extends string
+		Index extends T['secondaryIndexes'][number]
 			? Table.GetIndexKey<T, Index>[T['config']['indexes'][Index]['hash']['key']]
 			: Table.GetIndexKey<T, T['primaryIndex']>[T['config']['indexes'][T['primaryIndex']]['hash']['key']]
 	>,
@@ -69,7 +69,7 @@ export const queryQuickItems = async <
 	input: QueryQuickItemsInput<
 		Index,
 		Table.GetIndexCursorKey<K['Table'], Index>,
-		Index extends string
+		Index extends K['secondaryIndexes'][number]
 			? KeySpace.GetIndexHashKeyValueParamsMap<K>[Index]
 			: KeySpace.GetIndexHashKeyValueParamsMap<K>[K['primaryIndex']]
 	>
