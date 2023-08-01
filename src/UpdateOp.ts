@@ -1,4 +1,6 @@
-import { DkUpdateExpressionParams } from './util/convertObjectToUpdateExpression';
+import { DkUpdateExpressionParams, mergeUpdateExpressionParts } from './util/convertObjectToUpdateExpression';
+import { GenericAttributes } from './util/utils';
+import { createUpdateExpressionParts } from './util/convertObjectToUpdateExpression';
 
 type Params = {
 	key: string;
@@ -34,6 +36,26 @@ export const dkOp = {
 		});
 
 		return output as T;
+	},
+
+	MapValue: <T extends GenericAttributes>(object: T) => {
+		const output = new DkOp(({ key, alias, precedingKeys }) => {
+			const mappedObject = Object.fromEntries(Object.entries(object).map(([key, value]) => [key, dkOp.Value(value)]));
+
+			const updateExpressionPrecedingKeyPart = {
+				updateExpression: '',
+				expressionAttributeNames: {
+					[`#${alias}`]: key
+				},
+				expressionAttributeValues: {}
+			};
+
+			const updateExpressionParts = createUpdateExpressionParts(mappedObject, [...(precedingKeys || []), alias]);
+
+			return mergeUpdateExpressionParts([updateExpressionPrecedingKeyPart, ...updateExpressionParts]);
+		});
+
+		return output as unknown as T;
 	},
 
 	Add: (value: number) => {

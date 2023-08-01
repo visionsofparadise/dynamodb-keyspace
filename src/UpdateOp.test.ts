@@ -56,6 +56,51 @@ it('updates a value as a whole', async () => {
 	expect(Item!.deep.deep.deep.string).toBe(updatedTestString);
 });
 
+it('updates a map value as a whole', async () => {
+	const string = randomString();
+	const number = randomNumber();
+
+	const item: TestItem = {
+		string,
+		number,
+		deep: {
+			deep: {
+				deep: {
+					string
+				}
+			}
+		}
+	};
+
+	await DocumentClient.send(
+		new PutCommand({
+			TableName: TABLE_NAME,
+			Item: NoGsiKeySpace.withIndexKeys(item)
+		})
+	);
+
+	const updatedTestString = randomString();
+
+	await updateQuickItem(ManyGsiKeySpace, item, {
+		deep: {
+			deep: dkOp.MapValue({
+				deep: {
+					string: updatedTestString
+				}
+			})
+		}
+	});
+
+	const { Item } = await DocumentClient.send(
+		new GetCommand({
+			TableName: TABLE_NAME,
+			Key: ManyGsiKeySpace.keyOf(item)
+		})
+	);
+
+	expect(Item!.deep.deep.deep.string).toBe(updatedTestString);
+});
+
 it('increments a value', async () => {
 	const string = randomString();
 	const number = randomNumber();

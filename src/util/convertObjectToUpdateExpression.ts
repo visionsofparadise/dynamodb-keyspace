@@ -25,7 +25,7 @@ const createUpdateExpressionPart = (
 	}
 });
 
-const createUpdateExpressionParts = <Attributes extends GenericAttributes>(
+export const createUpdateExpressionParts = <Attributes extends GenericAttributes>(
 	attributes: Attributes,
 	precedingKeys?: Array<string>
 ): Array<DkUpdateExpressionParams> => {
@@ -61,37 +61,38 @@ const createUpdateExpressionParts = <Attributes extends GenericAttributes>(
 	});
 };
 
-export const convertObjectToUpdateExpression = <Attributes extends GenericAttributes>(attributes: Attributes) => {
-	const base: Required<DkUpdateExpressionParams> = {
-		updateExpression: 'SET ',
-		expressionAttributeNames: {},
-		expressionAttributeValues: {}
-	};
+export const mergeUpdateExpressionParts = (parts: Array<DkUpdateExpressionParams>) =>
+	parts.reduce(
+		(accumulator, expressionPart) => {
+			return {
+				updateExpression: (accumulator.updateExpression || '') + expressionPart.updateExpression,
+				expressionAttributeNames: {
+					...accumulator.expressionAttributeNames,
+					...expressionPart.expressionAttributeNames
+				},
+				expressionAttributeValues: {
+					...accumulator.expressionAttributeValues,
+					...expressionPart.expressionAttributeValues
+				}
+			};
+		},
+		{
+			updateExpression: '',
+			expressionAttributeNames: {},
+			expressionAttributeValues: {}
+		}
+	);
 
+export const convertObjectToUpdateExpression = <Attributes extends GenericAttributes>(attributes: Attributes) => {
 	const parts = createUpdateExpressionParts(attributes);
 
 	if (parts.length === 0) throw new Error('Invalid update object');
 
-	const merged = parts.reduce((accumulator, expressionPart) => {
-		return {
-			updateExpression: (accumulator.updateExpression || '') + expressionPart.updateExpression,
-			expressionAttributeNames: {
-				...accumulator.expressionAttributeNames,
-				...expressionPart.expressionAttributeNames
-			},
-			expressionAttributeValues: {
-				...accumulator.expressionAttributeValues,
-				...expressionPart.expressionAttributeValues
-			}
-		};
-	}, base);
+	const merged = mergeUpdateExpressionParts(parts);
 
 	const updateExpression = {
 		...merged,
-		updateExpression:
-			merged.updateExpression && merged.updateExpression.length > 4
-				? merged.updateExpression.trim().slice(0, -1)
-				: merged.updateExpression
+		updateExpression: `SET ${merged.updateExpression!.trim().slice(0, -1)}`
 	};
 
 	return updateExpression;

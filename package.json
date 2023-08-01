@@ -1,7 +1,7 @@
 {
 	"name": "dynamodb-keyspace",
 	"description": "Utilities for aws-sdk-v3 DynamoDB client that provide better typescript support and APIs for scalable usage.",
-	"version": "0.0.4",
+	"version": "0.0.5",
 	"main": "./dist-cjs/index.js",
 	"module": "./dist-es/index.js",
 	"types": "./dist-types/index.d.ts",
