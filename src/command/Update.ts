@@ -3,7 +3,7 @@ import { DkCommand } from './Command';
 import { ReturnValue } from '@aws-sdk/client-dynamodb';
 import { GenericAttributes } from '../util/utils';
 import { ReturnValuesAttributes, assertReturnValuesAttributes } from '../util/returnValuesAttributes';
-import { LowerCaseObjectKeys, lowerCaseKeys, upperCaseKeys } from '../util/keyCapitalize';
+import { UncapitalizeKeys, uncapitalizeKeys, capitalizeKeys } from 'object-key-casing';
 import { applyDefaults } from '../util/defaults';
 import { DkClientConfig } from '../Client';
 import { executeMiddlewares, executeMiddleware } from '../Middleware';
@@ -19,7 +19,7 @@ export type DkUpdateReturnValues = ReturnValue | undefined;
 export interface DkUpdateCommandInput<
 	Key extends GenericAttributes = GenericAttributes,
 	ReturnValues extends DkUpdateReturnValues = DkUpdateReturnValues
-> extends LowerCaseObjectKeys<
+> extends UncapitalizeKeys<
 		Omit<UpdateCommandInput, 'Key' | 'ReturnValues' | 'AttributeUpdates' | 'Expected' | 'ConditionalOperator'>
 	> {
 	key: Key;
@@ -29,7 +29,7 @@ export interface DkUpdateCommandInput<
 export interface DkUpdateCommandOutput<
 	Attributes extends GenericAttributes = GenericAttributes,
 	ReturnValues extends DkUpdateReturnValues = DkUpdateReturnValues
-> extends LowerCaseObjectKeys<Omit<UpdateCommandOutput, 'Attributes'>> {
+> extends UncapitalizeKeys<Omit<UpdateCommandOutput, 'Attributes'>> {
 	attributes: ReturnValuesAttributes<Attributes, ReturnValues>;
 }
 
@@ -70,7 +70,7 @@ export class DkUpdateCommand<
 			middleware
 		);
 
-		const upperCaseInput = upperCaseKeys(postMiddlewareInput);
+		const upperCaseInput = capitalizeKeys(postMiddlewareInput);
 
 		return upperCaseInput;
 	};
@@ -79,7 +79,7 @@ export class DkUpdateCommand<
 		output: UpdateCommandOutput,
 		{ middleware }: DkClientConfig
 	): Promise<DkUpdateCommandOutput<Attributes, ReturnValues>> => {
-		const lowerCaseOutput = lowerCaseKeys(output);
+		const lowerCaseOutput = uncapitalizeKeys(output);
 
 		const attributes = output.Attributes as Attributes | undefined;
 

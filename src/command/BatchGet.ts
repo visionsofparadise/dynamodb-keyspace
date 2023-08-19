@@ -1,6 +1,6 @@
 import { BatchGetCommand, BatchGetCommandInput, BatchGetCommandOutput } from '@aws-sdk/lib-dynamodb';
 import { DkCommand } from './Command';
-import { LowerCaseObjectKeys, lowerCaseKeys, upperCaseKeys } from '../util/keyCapitalize';
+import { UncapitalizeKeys, uncapitalizeKeys, capitalizeKeys } from 'object-key-casing';
 import { applyDefaults } from '../util/defaults';
 import { DkClientConfig } from '../Client';
 import { executeMiddlewares, executeMiddleware } from '../Middleware';
@@ -18,10 +18,10 @@ const BATCH_GET_COMMAND_OUTPUT_HOOK = [
 ] as const;
 
 export interface DkBatchGetCommandInput<Key extends GenericAttributes = GenericAttributes>
-	extends LowerCaseObjectKeys<Omit<BatchGetCommandInput, 'RequestItems'>> {
+	extends UncapitalizeKeys<Omit<BatchGetCommandInput, 'RequestItems'>> {
 	requests: Record<
 		string,
-		LowerCaseObjectKeys<Omit<KeysAndAttributes, 'Keys' | 'AttributesToGet'>> & {
+		UncapitalizeKeys<Omit<KeysAndAttributes, 'Keys' | 'AttributesToGet'>> & {
 			keys: Key[];
 		}
 	>;
@@ -30,11 +30,11 @@ export interface DkBatchGetCommandInput<Key extends GenericAttributes = GenericA
 export interface DkBatchGetCommandOutput<
 	Attributes extends GenericAttributes = GenericAttributes,
 	Key extends GenericAttributes = GenericAttributes
-> extends LowerCaseObjectKeys<Omit<BatchGetCommandOutput, 'Responses' | 'UnprocessedKeys'>> {
+> extends UncapitalizeKeys<Omit<BatchGetCommandOutput, 'Responses' | 'UnprocessedKeys'>> {
 	items: Record<string, Attributes[]>;
 	unprocessedRequests: Record<
 		string,
-		| (LowerCaseObjectKeys<Omit<KeysAndAttributes, 'Keys' | 'AttributesToGet'>> & {
+		| (UncapitalizeKeys<Omit<KeysAndAttributes, 'Keys' | 'AttributesToGet'>> & {
 				keys: Key[];
 		  })
 		| undefined
@@ -77,12 +77,12 @@ export class DkBatchGetCommand<
 
 		const formattedInput = {
 			requestItems: Object.fromEntries(
-				Object.entries(requests).map(([tableName, keysAndAttributes]) => [tableName, upperCaseKeys(keysAndAttributes)])
+				Object.entries(requests).map(([tableName, keysAndAttributes]) => [tableName, capitalizeKeys(keysAndAttributes)])
 			),
 			...rest
 		};
 
-		const upperCaseInput = upperCaseKeys(formattedInput);
+		const upperCaseInput = capitalizeKeys(formattedInput);
 
 		return upperCaseInput;
 	};
@@ -91,7 +91,7 @@ export class DkBatchGetCommand<
 		output: BatchGetCommandOutput,
 		{ middleware }: DkClientConfig
 	): Promise<DkBatchGetCommandOutput<Attributes, Key>> => {
-		const lowerCaseOutput = lowerCaseKeys(output);
+		const lowerCaseOutput = uncapitalizeKeys(output);
 
 		const { responses, unprocessedKeys, ...rest } = lowerCaseOutput;
 
@@ -111,7 +111,7 @@ export class DkBatchGetCommand<
 
 				const typedKeys = (Keys || []) as Array<Key>;
 
-				return [tableName, lowerCaseKeys({ Keys: typedKeys, ...unprocessedRest })];
+				return [tableName, uncapitalizeKeys({ Keys: typedKeys, ...unprocessedRest })];
 			})
 		);
 

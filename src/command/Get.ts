@@ -1,7 +1,7 @@
 import { GetCommand, GetCommandInput, GetCommandOutput } from '@aws-sdk/lib-dynamodb';
 import { DkCommand } from './Command';
 import { GenericAttributes } from '../util/utils';
-import { LowerCaseObjectKeys, lowerCaseKeys, upperCaseKeys } from '../util/keyCapitalize';
+import { UncapitalizeKeys, uncapitalizeKeys, capitalizeKeys } from 'object-key-casing';
 import { applyDefaults } from '../util/defaults';
 import { DkClientConfig } from '../Client';
 import { executeMiddlewares, executeMiddleware } from '../Middleware';
@@ -13,12 +13,12 @@ const GET_COMMAND_OUTPUT_DATA_TYPE = 'GetCommandOutput' as const;
 const GET_COMMAND_OUTPUT_HOOK = ['CommandOutput', 'ReadCommandOutput', GET_COMMAND_OUTPUT_DATA_TYPE] as const;
 
 export interface DkGetCommandInput<Key extends GenericAttributes = GenericAttributes>
-	extends LowerCaseObjectKeys<Omit<GetCommandInput, 'Key'>> {
+	extends UncapitalizeKeys<Omit<GetCommandInput, 'Key'>> {
 	key: Key;
 }
 
 export interface DkGetCommandOutput<Attributes extends GenericAttributes = GenericAttributes>
-	extends LowerCaseObjectKeys<Omit<GetCommandOutput, 'Item'>> {
+	extends UncapitalizeKeys<Omit<GetCommandOutput, 'Item'>> {
 	item: Attributes;
 }
 
@@ -54,7 +54,7 @@ export class DkGetCommand<
 			middleware
 		);
 
-		const upperCaseInput = upperCaseKeys(postMiddlewareInput);
+		const upperCaseInput = capitalizeKeys(postMiddlewareInput);
 
 		return upperCaseInput;
 	};
@@ -63,7 +63,7 @@ export class DkGetCommand<
 		output: GetCommandOutput,
 		{ middleware }: DkClientConfig
 	): Promise<DkGetCommandOutput<Attributes>> => {
-		const lowerCaseOutput = lowerCaseKeys(output);
+		const lowerCaseOutput = uncapitalizeKeys(output);
 
 		const item = output.Item as Attributes | undefined;
 

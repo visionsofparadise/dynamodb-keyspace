@@ -3,7 +3,7 @@ import { DkCommand } from './Command';
 import { ReturnValue } from '@aws-sdk/client-dynamodb';
 import { GenericAttributes } from '../util/utils';
 import { ReturnValuesAttributes, assertReturnValuesAttributes } from '../util/returnValuesAttributes';
-import { LowerCaseObjectKeys, lowerCaseKeys, upperCaseKeys } from '../util/keyCapitalize';
+import { UncapitalizeKeys, uncapitalizeKeys, capitalizeKeys } from 'object-key-casing';
 import { executeMiddleware, executeMiddlewares } from '../Middleware';
 import { DkClientConfig } from '../Client';
 import { applyDefaults } from '../util/defaults';
@@ -19,7 +19,7 @@ export type DkPutReturnValues = Extract<ReturnValue, 'ALL_OLD' | 'NONE'> | undef
 export interface DkPutCommandInput<
 	Attributes extends GenericAttributes = GenericAttributes,
 	ReturnValues extends DkPutReturnValues = undefined
-> extends LowerCaseObjectKeys<Omit<PutCommandInput, 'Item' | 'ReturnValues' | 'Expected' | 'ConditionalOperator'>> {
+> extends UncapitalizeKeys<Omit<PutCommandInput, 'Item' | 'ReturnValues' | 'Expected' | 'ConditionalOperator'>> {
 	item: Attributes;
 	returnValues?: ReturnValues;
 }
@@ -27,7 +27,7 @@ export interface DkPutCommandInput<
 export interface DkPutCommandOutput<
 	Attributes extends GenericAttributes = GenericAttributes,
 	ReturnValues extends DkPutReturnValues = undefined
-> extends LowerCaseObjectKeys<Omit<PutCommandOutput, 'Attributes'>> {
+> extends UncapitalizeKeys<Omit<PutCommandOutput, 'Attributes'>> {
 	attributes: ReturnValuesAttributes<Attributes, ReturnValues>;
 }
 
@@ -67,7 +67,7 @@ export class DkPutCommand<
 			middleware
 		);
 
-		const upperCaseInput = upperCaseKeys(postMiddlewareInput);
+		const upperCaseInput = capitalizeKeys(postMiddlewareInput);
 
 		return upperCaseInput;
 	};
@@ -76,7 +76,7 @@ export class DkPutCommand<
 		output: PutCommandOutput,
 		{ middleware }: DkClientConfig
 	): Promise<DkPutCommandOutput<Attributes, ReturnValues>> => {
-		const lowerCaseOutput = lowerCaseKeys(output);
+		const lowerCaseOutput = uncapitalizeKeys(output);
 
 		const attributes = output.Attributes as Attributes | undefined;
 

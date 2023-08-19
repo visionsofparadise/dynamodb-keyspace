@@ -1,7 +1,7 @@
 import { ScanCommand, ScanCommandInput, ScanCommandOutput } from '@aws-sdk/lib-dynamodb';
 import { DkCommand } from './Command';
 import { GenericAttributes } from '../util/utils';
-import { LowerCaseObjectKeys, lowerCaseKeys, upperCaseKeys } from '../util/keyCapitalize';
+import { UncapitalizeKeys, uncapitalizeKeys, capitalizeKeys } from 'object-key-casing';
 import { applyDefaults } from '../util/defaults';
 import { DkClientConfig } from '../Client';
 import { executeMiddlewares, executeMiddleware } from '../Middleware';
@@ -13,14 +13,14 @@ const SCAN_COMMAND_OUTPUT_DATA_TYPE = 'ScanCommandOutput' as const;
 const SCAN_COMMAND_OUTPUT_HOOK = ['CommandOutput', 'ReadCommandOutput', SCAN_COMMAND_OUTPUT_DATA_TYPE] as const;
 
 export interface DkScanCommandInput<CursorKey extends GenericAttributes = GenericAttributes>
-	extends LowerCaseObjectKeys<Omit<ScanCommandInput, 'ExclusiveStartKey' | 'AttributesToGet' | 'ConditionalOperator'>> {
+	extends UncapitalizeKeys<Omit<ScanCommandInput, 'ExclusiveStartKey' | 'AttributesToGet' | 'ConditionalOperator'>> {
 	cursorKey?: CursorKey;
 }
 
 export interface DkScanCommandOutput<
 	Attributes extends GenericAttributes = GenericAttributes,
 	CursorKey extends GenericAttributes = GenericAttributes
-> extends LowerCaseObjectKeys<Omit<ScanCommandOutput, 'Items' | 'LastEvaluatedKey'>> {
+> extends UncapitalizeKeys<Omit<ScanCommandOutput, 'Items' | 'LastEvaluatedKey'>> {
 	items: Array<Attributes>;
 	cursorKey?: CursorKey;
 }
@@ -64,7 +64,7 @@ export class DkScanCommand<
 			...rest
 		};
 
-		const upperCaseInput = upperCaseKeys(formattedInput);
+		const upperCaseInput = capitalizeKeys(formattedInput);
 
 		return upperCaseInput;
 	};
@@ -73,7 +73,7 @@ export class DkScanCommand<
 		output: ScanCommandOutput,
 		{ middleware }: DkClientConfig
 	): Promise<DkScanCommandOutput<Attributes, CursorKey>> => {
-		const lowerCaseOutput = lowerCaseKeys(output);
+		const lowerCaseOutput = uncapitalizeKeys(output);
 
 		const items = (output.Items || []) as Array<Attributes>;
 		const cursorKey = output.LastEvaluatedKey as CursorKey | undefined;

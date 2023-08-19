@@ -1,7 +1,7 @@
 import { DeleteCommand, DeleteCommandInput, DeleteCommandOutput } from '@aws-sdk/lib-dynamodb';
 import { DkCommand } from './Command';
 import { GenericAttributes } from '../util/utils';
-import { LowerCaseObjectKeys, lowerCaseKeys, upperCaseKeys } from '../util/keyCapitalize';
+import { UncapitalizeKeys, uncapitalizeKeys, capitalizeKeys } from 'object-key-casing';
 import { applyDefaults } from '../util/defaults';
 import { DkClientConfig } from '../Client';
 import { executeMiddlewares, executeMiddleware } from '../Middleware';
@@ -19,7 +19,7 @@ export type DkDeleteReturnValues = Extract<ReturnValue, 'ALL_OLD' | 'NONE'> | un
 export interface DkDeleteCommandInput<
 	Key extends GenericAttributes = GenericAttributes,
 	ReturnValues extends DkDeleteReturnValues = undefined
-> extends LowerCaseObjectKeys<Omit<DeleteCommandInput, 'Key'>> {
+> extends UncapitalizeKeys<Omit<DeleteCommandInput, 'Key'>> {
 	key: Key;
 	returnValues?: ReturnValues;
 }
@@ -27,7 +27,7 @@ export interface DkDeleteCommandInput<
 export interface DkDeleteCommandOutput<
 	Attributes extends GenericAttributes = GenericAttributes,
 	ReturnValues extends DkDeleteReturnValues = undefined
-> extends LowerCaseObjectKeys<Omit<DeleteCommandOutput, 'Attributes'>> {
+> extends UncapitalizeKeys<Omit<DeleteCommandOutput, 'Attributes'>> {
 	attributes: ReturnValuesAttributes<Attributes, ReturnValues>;
 }
 
@@ -73,7 +73,7 @@ export class DkDeleteCommand<
 			middleware
 		);
 
-		const upperCaseInput = upperCaseKeys(postMiddlewareInput);
+		const upperCaseInput = capitalizeKeys(postMiddlewareInput);
 
 		return upperCaseInput;
 	};
@@ -82,7 +82,7 @@ export class DkDeleteCommand<
 		output: DeleteCommandOutput,
 		{ middleware }: DkClientConfig
 	): Promise<DkDeleteCommandOutput<Attributes, ReturnValues>> => {
-		const lowerCaseOutput = lowerCaseKeys(output);
+		const lowerCaseOutput = uncapitalizeKeys(output);
 
 		const attributes = output.Attributes as Attributes | undefined;
 

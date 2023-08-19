@@ -1,7 +1,7 @@
 import { BatchWriteCommand, BatchWriteCommandInput, BatchWriteCommandOutput } from '@aws-sdk/lib-dynamodb';
 import { DkCommand } from './Command';
 import { GenericAttributes } from '../util/utils';
-import { LowerCaseObjectKeys, lowerCaseKeys, upperCaseKeys } from '../util/keyCapitalize';
+import { UncapitalizeKeys, uncapitalizeKeys, capitalizeKeys } from 'object-key-casing';
 import { applyDefaults } from '../util/defaults';
 import { DkClientConfig } from '../Client';
 import { executeMiddlewares, executeMiddleware } from '../Middleware';
@@ -23,14 +23,14 @@ const BATCH_WRITE_COMMAND_OUTPUT_HOOK = [
 export interface DkBatchWriteCommandInput<
 	Attributes extends GenericAttributes = GenericAttributes,
 	Key extends GenericAttributes = GenericAttributes
-> extends LowerCaseObjectKeys<Omit<BatchWriteCommandInput, 'RequestItems'>> {
+> extends UncapitalizeKeys<Omit<BatchWriteCommandInput, 'RequestItems'>> {
 	requests: Record<string, Array<{ put: Attributes } | { delete: Key }>>;
 }
 
 export interface DkBatchWriteCommandOutput<
 	Attributes extends GenericAttributes = GenericAttributes,
 	Key extends GenericAttributes = GenericAttributes
-> extends LowerCaseObjectKeys<Omit<BatchWriteCommandOutput, 'UnprocessedItems'>> {
+> extends UncapitalizeKeys<Omit<BatchWriteCommandOutput, 'UnprocessedItems'>> {
 	unprocessedRequests: Record<string, Array<{ put: Attributes } | { delete: Key }>>;
 }
 
@@ -96,7 +96,7 @@ export class DkBatchWriteCommand<
 			...rest
 		};
 
-		const upperCaseInput = upperCaseKeys(formattedInput);
+		const upperCaseInput = capitalizeKeys(formattedInput);
 
 		return upperCaseInput;
 	};
@@ -105,7 +105,7 @@ export class DkBatchWriteCommand<
 		output: BatchWriteCommandOutput,
 		{ middleware }: DkClientConfig
 	): Promise<DkBatchWriteCommandOutput<Attributes, Key>> => {
-		const lowerCaseOutput = lowerCaseKeys(output);
+		const lowerCaseOutput = uncapitalizeKeys(output);
 
 		const { unprocessedItems, ...rest } = lowerCaseOutput;
 

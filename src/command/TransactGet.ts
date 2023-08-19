@@ -1,7 +1,7 @@
 import { TransactGetCommand, TransactGetCommandInput, TransactGetCommandOutput } from '@aws-sdk/lib-dynamodb';
 import { DkCommand } from './Command';
 import { GenericAttributes } from '../util/utils';
-import { LowerCaseObjectKeys, lowerCaseKeys, upperCaseKeys } from '../util/keyCapitalize';
+import { UncapitalizeKeys, uncapitalizeKeys, capitalizeKeys } from 'object-key-casing';
 import { applyDefaults } from '../util/defaults';
 import { DkClientConfig } from '../Client';
 import { executeMiddlewares, executeMiddleware } from '../Middleware';
@@ -22,14 +22,14 @@ const TRANSACT_GET_COMMAND_OUTPUT_HOOK = [
 ] as const;
 
 export interface DkTransactGetCommandInput<Key extends GenericAttributes = GenericAttributes>
-	extends LowerCaseObjectKeys<Omit<TransactGetCommandInput, 'TransactItems'>> {
-	requests: (LowerCaseObjectKeys<Omit<Get, 'Key'>> & {
+	extends UncapitalizeKeys<Omit<TransactGetCommandInput, 'TransactItems'>> {
+	requests: (UncapitalizeKeys<Omit<Get, 'Key'>> & {
 		key: Key;
 	})[];
 }
 
 export interface DkTransactGetCommandOutput<Attributes extends GenericAttributes = GenericAttributes>
-	extends LowerCaseObjectKeys<Omit<TransactGetCommandOutput, 'Responses'>> {
+	extends UncapitalizeKeys<Omit<TransactGetCommandOutput, 'Responses'>> {
 	items: Array<Attributes>;
 }
 
@@ -68,11 +68,11 @@ export class DkTransactGetCommand<
 		const { requests, ...rest } = postMiddlewareInput;
 
 		const formattedInput = {
-			transactItems: requests.map(request => ({ Get: upperCaseKeys(request) })),
+			transactItems: requests.map(request => ({ Get: capitalizeKeys(request) })),
 			...rest
 		};
 
-		const upperCaseInput = upperCaseKeys(formattedInput);
+		const upperCaseInput = capitalizeKeys(formattedInput);
 
 		return upperCaseInput;
 	};
@@ -81,7 +81,7 @@ export class DkTransactGetCommand<
 		output: TransactGetCommandOutput,
 		{ middleware }: DkClientConfig
 	): Promise<DkTransactGetCommandOutput<Attributes>> => {
-		const lowerCaseOutput = lowerCaseKeys(output);
+		const lowerCaseOutput = uncapitalizeKeys(output);
 
 		const { responses, ...rest } = lowerCaseOutput;
 

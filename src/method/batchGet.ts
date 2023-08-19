@@ -1,14 +1,14 @@
 import { KeysAndAttributes } from '@aws-sdk/client-dynamodb';
 import { GenericAttributes } from '../util/utils';
 import { Table } from '../Table';
-import { LowerCaseObjectKeys } from '../util/keyCapitalize';
+import { UncapitalizeKeys } from 'object-key-casing';
 import { DkBatchGetCommand, DkBatchGetCommandInput } from '../command/BatchGet';
 import { KeySpace } from '../KeySpace';
 import { DkClient } from '../Client';
 
 export interface BatchGetItemsInput
 	extends Omit<DkBatchGetCommandInput, 'RequestItems'>,
-		LowerCaseObjectKeys<Omit<KeysAndAttributes, 'Keys' | 'AttributesToGet'>> {
+		UncapitalizeKeys<Omit<KeysAndAttributes, 'Keys' | 'AttributesToGet'>> {
 	pageLimit?: number;
 }
 
@@ -17,7 +17,7 @@ export interface BatchGetItemsOutput<
 	Key extends GenericAttributes = GenericAttributes
 > {
 	items: Array<Attributes>;
-	unprocessedRequests: LowerCaseObjectKeys<Omit<KeysAndAttributes, 'Keys' | 'AttributesToGet'>> & { keys: Array<Key> };
+	unprocessedRequests: UncapitalizeKeys<Omit<KeysAndAttributes, 'Keys' | 'AttributesToGet'>> & { keys: Array<Key> };
 }
 
 export const batchGetTableItems = async <T extends Table = Table>(
