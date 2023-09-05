@@ -71,6 +71,13 @@ export class DynamoDBKeySpaceStack extends Stack {
 			sortKey: { name: 'sk', type: AttributeType.STRING }
 		});
 
+		scanDatabase.addGlobalSecondaryIndex({
+			indexName: `gsi0`,
+			partitionKey: { name: `gsi0Pk`, type: AttributeType.STRING },
+			sortKey: { name: `gsi0Sk`, type: AttributeType.STRING },
+			projectionType: ProjectionType.ALL
+		});
+
 		this.scanTableName = new CfnOutput(this, `${props.deploymentName}-scanTableName`, {
 			value: scanDatabase.tableName,
 			exportName: `${props.deploymentName}-scanTableName`
