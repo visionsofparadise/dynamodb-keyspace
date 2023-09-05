@@ -26,9 +26,9 @@ it('updates an existing item', async () => {
 	const updateableString = randomString();
 
 	const result = await updateItem(NoGsiKeySpace, item, {
-		returnValues: ReturnValue.NONE,
-		updateExpression: 'SET updateableString = :string',
-		expressionAttributeValues: {
+		ReturnValues: ReturnValue.NONE,
+		UpdateExpression: 'SET updateableString = :string',
+		ExpressionAttributeValues: {
 			':string': updateableString
 		}
 	});
@@ -66,9 +66,9 @@ it('returns all new values', async () => {
 	const updateableString = randomString();
 
 	const result = await updateItem(NoGsiKeySpace, item, {
-		returnValues: ReturnValue.ALL_NEW,
-		updateExpression: 'SET updateableString = :string',
-		expressionAttributeValues: {
+		ReturnValues: ReturnValue.ALL_NEW,
+		UpdateExpression: 'SET updateableString = :string',
+		ExpressionAttributeValues: {
 			':string': updateableString
 		}
 	});
@@ -104,9 +104,9 @@ it('returns all old values', async () => {
 	const updateableString = randomString();
 
 	const result = await updateItem(NoGsiKeySpace, item, {
-		returnValues: ReturnValue.ALL_OLD,
-		updateExpression: 'SET updateableString = :string',
-		expressionAttributeValues: {
+		ReturnValues: ReturnValue.ALL_OLD,
+		UpdateExpression: 'SET updateableString = :string',
+		ExpressionAttributeValues: {
 			':string': updateableString
 		}
 	});
@@ -137,9 +137,9 @@ it('returns updated new values', async () => {
 	const updateableString = randomString();
 
 	const result = await updateItem(NoGsiKeySpace, item, {
-		returnValues: ReturnValue.UPDATED_NEW,
-		updateExpression: 'SET updateableString = :string',
-		expressionAttributeValues: {
+		ReturnValues: ReturnValue.UPDATED_NEW,
+		UpdateExpression: 'SET updateableString = :string',
+		ExpressionAttributeValues: {
 			':string': updateableString
 		}
 	});
@@ -174,9 +174,9 @@ it('returns updated old values', async () => {
 	const updateableString = randomString();
 
 	const result = await updateItem(NoGsiKeySpace, item, {
-		returnValues: ReturnValue.UPDATED_OLD,
-		updateExpression: 'SET updateableString = :string',
-		expressionAttributeValues: {
+		ReturnValues: ReturnValue.UPDATED_OLD,
+		UpdateExpression: 'SET updateableString = :string',
+		ExpressionAttributeValues: {
 			':string': updateableString
 		}
 	});

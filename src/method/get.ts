@@ -17,12 +17,12 @@ export const getTableItem = async <T extends Table>(
 	const output = await dkClient.send(
 		new DkGetCommand<Table.GetAttributes<T>, Table.GetIndexKey<T, T['primaryIndex']>>({
 			...input,
-			tableName: Table.tableName,
-			key: key
+			TableName: Table.name,
+			Key: key
 		})
 	);
 
-	return output.item;
+	return output.Item;
 };
 
 export const getItem = async <K extends KeySpace>(

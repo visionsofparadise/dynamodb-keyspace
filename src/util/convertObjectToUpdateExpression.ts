@@ -3,9 +3,9 @@ import { NativeAttributeValue } from '@aws-sdk/util-dynamodb';
 import { GenericAttributes, randomString } from './utils';
 
 export interface DkUpdateExpressionParams {
-	updateExpression?: string;
-	expressionAttributeNames?: Record<string, string>;
-	expressionAttributeValues?: GenericAttributes;
+	UpdateExpression?: string;
+	ExpressionAttributeNames?: Record<string, string>;
+	ExpressionAttributeValues?: GenericAttributes;
 }
 
 const createUpdateExpressionPart = (
@@ -14,13 +14,13 @@ const createUpdateExpressionPart = (
 	value: NativeAttributeValue,
 	precedingKeys?: Array<string>
 ): DkUpdateExpressionParams => ({
-	updateExpression: `${
+	UpdateExpression: `${
 		precedingKeys ? `${precedingKeys.map(key => `#${key}`).join('.')}.` : ''
 	}#${alias} = :${alias}, `,
-	expressionAttributeNames: {
+	ExpressionAttributeNames: {
 		[`#${alias}`]: key
 	},
-	expressionAttributeValues: {
+	ExpressionAttributeValues: {
 		[`:${alias}`]: value
 	}
 });
@@ -42,11 +42,11 @@ export const createUpdateExpressionParts = <Attributes extends GenericAttributes
 
 		if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
 			const updateExpressionPrecedingKeyPart = {
-				updateExpression: '',
-				expressionAttributeNames: {
+				UpdateExpression: '',
+				ExpressionAttributeNames: {
 					[`#${alias}`]: key
 				},
-				expressionAttributeValues: {}
+				ExpressionAttributeValues: {}
 			};
 
 			return [
@@ -65,21 +65,21 @@ export const mergeUpdateExpressionParts = (parts: Array<DkUpdateExpressionParams
 	parts.reduce(
 		(accumulator, expressionPart) => {
 			return {
-				updateExpression: (accumulator.updateExpression || '') + expressionPart.updateExpression,
-				expressionAttributeNames: {
-					...accumulator.expressionAttributeNames,
-					...expressionPart.expressionAttributeNames
+				UpdateExpression: (accumulator.UpdateExpression || '') + expressionPart.UpdateExpression,
+				ExpressionAttributeNames: {
+					...accumulator.ExpressionAttributeNames,
+					...expressionPart.ExpressionAttributeNames
 				},
-				expressionAttributeValues: {
-					...accumulator.expressionAttributeValues,
-					...expressionPart.expressionAttributeValues
+				ExpressionAttributeValues: {
+					...accumulator.ExpressionAttributeValues,
+					...expressionPart.ExpressionAttributeValues
 				}
 			};
 		},
 		{
-			updateExpression: '',
-			expressionAttributeNames: {},
-			expressionAttributeValues: {}
+			UpdateExpression: '',
+			ExpressionAttributeNames: {},
+			ExpressionAttributeValues: {}
 		}
 	);
 
@@ -92,7 +92,7 @@ export const convertObjectToUpdateExpression = <Attributes extends GenericAttrib
 
 	const updateExpression = {
 		...merged,
-		updateExpression: `SET ${merged.updateExpression!.trim().slice(0, -1)}`
+		UpdateExpression: `SET ${merged.UpdateExpression!.trim().slice(0, -1)}`
 	};
 
 	return updateExpression;

@@ -25,13 +25,13 @@ it('it gets 10 items', async () => {
 
 	const result = await TestClient.send(
 		new DkBatchGetCommand({
-			requests: {
+			RequestItems: {
 				[TABLE_NAME]: {
-					keys: items.map(({ pk, sk }) => ({ pk, sk }))
+					Keys: items.map(({ pk, sk }) => ({ pk, sk }))
 				}
 			}
 		})
 	);
 
-	expect(result.items[TABLE_NAME].length).toBe(10);
+	expect(result.Responses[TABLE_NAME].length).toBe(10);
 });

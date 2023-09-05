@@ -1,6 +1,5 @@
 import { BatchGetCommand, BatchGetCommandInput, BatchGetCommandOutput } from '@aws-sdk/lib-dynamodb';
 import { DkCommand } from './Command';
-import { UncapitalizeKeys, uncapitalizeKeys, capitalizeKeys } from 'object-key-casing';
 import { applyDefaults } from '../util/defaults';
 import { DkClientConfig } from '../Client';
 import { executeMiddlewares, executeMiddleware } from '../Middleware';
@@ -18,11 +17,11 @@ const BATCH_GET_COMMAND_OUTPUT_HOOK = [
 ] as const;
 
 export interface DkBatchGetCommandInput<Key extends GenericAttributes = GenericAttributes>
-	extends UncapitalizeKeys<Omit<BatchGetCommandInput, 'RequestItems'>> {
-	requests: Record<
+	extends Omit<BatchGetCommandInput, 'RequestItems'> {
+	RequestItems: Record<
 		string,
-		UncapitalizeKeys<Omit<KeysAndAttributes, 'Keys' | 'AttributesToGet'>> & {
-			keys: Key[];
+		Omit<KeysAndAttributes, 'Keys' | 'AttributesToGet'> & {
+			Keys: Key[];
 		}
 	>;
 }
@@ -30,12 +29,12 @@ export interface DkBatchGetCommandInput<Key extends GenericAttributes = GenericA
 export interface DkBatchGetCommandOutput<
 	Attributes extends GenericAttributes = GenericAttributes,
 	Key extends GenericAttributes = GenericAttributes
-> extends UncapitalizeKeys<Omit<BatchGetCommandOutput, 'Responses' | 'UnprocessedKeys'>> {
-	items: Record<string, Attributes[]>;
-	unprocessedRequests: Record<
+> extends Omit<BatchGetCommandOutput, 'Responses' | 'UnprocessedKeys'> {
+	Responses: Record<string, Attributes[]>;
+	UnprocessedKeys: Record<
 		string,
-		| (UncapitalizeKeys<Omit<KeysAndAttributes, 'Keys' | 'AttributesToGet'>> & {
-				keys: Key[];
+		| (Omit<KeysAndAttributes, 'Keys' | 'AttributesToGet'> & {
+				Keys: Key[];
 		  })
 		| undefined
 	>;
@@ -62,7 +61,7 @@ export class DkBatchGetCommand<
 	outputMiddlewareConfig = { dataType: BATCH_GET_COMMAND_OUTPUT_DATA_TYPE, hooks: BATCH_GET_COMMAND_OUTPUT_HOOK };
 
 	handleInput = async ({ defaults, middleware }: DkClientConfig): Promise<BatchGetCommandInput> => {
-		const postDefaultsInput = applyDefaults(this.input, defaults, ['returnConsumedCapacity']);
+		const postDefaultsInput = applyDefaults(this.input, defaults, ['ReturnConsumedCapacity']);
 
 		const { data: postMiddlewareInput } = await executeMiddlewares(
 			[...this.inputMiddlewareConfig.hooks],
@@ -73,71 +72,29 @@ export class DkBatchGetCommand<
 			middleware
 		);
 
-		const { requests, ...rest } = postMiddlewareInput;
-
-		const formattedInput = {
-			requestItems: Object.fromEntries(
-				Object.entries(requests).map(([tableName, keysAndAttributes]) => [tableName, capitalizeKeys(keysAndAttributes)])
-			),
-			...rest
-		};
-
-		const upperCaseInput = capitalizeKeys(formattedInput);
-
-		return upperCaseInput;
+		return postMiddlewareInput;
 	};
 
 	handleOutput = async (
 		output: BatchGetCommandOutput,
 		{ middleware }: DkClientConfig
 	): Promise<DkBatchGetCommandOutput<Attributes, Key>> => {
-		const lowerCaseOutput = uncapitalizeKeys(output);
-
-		const { responses, unprocessedKeys, ...rest } = lowerCaseOutput;
-
-		const items = Object.fromEntries(
-			Object.entries(responses || {}).map(([tableName, tableItems]) => {
-				const typedTableItems = (tableItems || []) as Array<Attributes>;
-
-				return [tableName, typedTableItems];
-			})
-		);
-
-		const formattedUnprocessedRequests = Object.fromEntries(
-			Object.entries(unprocessedKeys || {}).map(([tableName, request]) => {
-				if (!request) return [tableName, undefined];
-
-				const { Keys, ...unprocessedRest } = request;
-
-				const typedKeys = (Keys || []) as Array<Key>;
-
-				return [tableName, uncapitalizeKeys({ Keys: typedKeys, ...unprocessedRest })];
-			})
-		);
-
-		const formattedOutput: DkBatchGetCommandOutput<Attributes, Key> = {
-			...rest,
-			items,
-			unprocessedRequests: formattedUnprocessedRequests as DkBatchGetCommandOutput<
-				Attributes,
-				Key
-			>['unprocessedRequests']
-		};
+		const typedOutput = output as DkBatchGetCommandOutput<Attributes, Key>;
 
 		const { data: postMiddlewareOutput } = await executeMiddlewares(
 			[...this.outputMiddlewareConfig.hooks],
 			{
 				dataType: this.outputMiddlewareConfig.dataType,
-				data: formattedOutput
+				data: typedOutput
 			},
 			middleware
 		);
 
-		if (postMiddlewareOutput.consumedCapacity) {
-			for (const consumedCapacity of postMiddlewareOutput.consumedCapacity) {
+		if (postMiddlewareOutput.ConsumedCapacity) {
+			for (const ConsumedCapacity of postMiddlewareOutput.ConsumedCapacity) {
 				await executeMiddleware(
 					'ConsumedCapacity',
-					{ dataType: 'ConsumedCapacity', data: consumedCapacity },
+					{ dataType: 'ConsumedCapacity', data: ConsumedCapacity },
 					middleware
 				);
 			}

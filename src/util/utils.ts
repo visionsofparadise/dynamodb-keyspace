@@ -36,6 +36,8 @@ export const arrayOfLength = (length: number) =>
 
 export type GenericAttributes = Record<string, NativeAttributeValue>;
 
+export type Cast<A1 extends any, A2 extends any> = A1 extends A2 ? A1 : A2;
+
 export type Remap<T> = T extends object
 	? {
 			[K in keyof T]: K extends keyof T ? T[K] : never;
@@ -43,3 +45,29 @@ export type Remap<T> = T extends object
 	: never;
 
 export type NotNever<A1, A2> = A1 extends never ? A2 : A1;
+
+export type IntersectOf<U extends any> = (U extends unknown ? (k: U) => void : never) extends (k: infer I) => void
+	? I
+	: never;
+
+export type DeepPartial<O extends object> = {
+	[K in keyof O]?: DeepPartial<O[K]>;
+};
+
+export type At<A extends any, K extends PropertyKey> = A extends any[]
+	? number extends A['length']
+		? K extends number | `${number}`
+			? A[never] | undefined
+			: undefined
+		: K extends keyof A
+		? A[K]
+		: undefined
+	: unknown extends A
+	? unknown
+	: K extends keyof A
+	? A[K]
+	: undefined;
+
+export type Unionize<O extends object, O1 extends object, K extends PropertyKey = PropertyKey> = {
+	[P in keyof O]: P extends K ? O[P] | At<O1, P> : O[P];
+} & {};

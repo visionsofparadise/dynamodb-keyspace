@@ -1,11 +1,10 @@
 import { TransactWriteCommand, TransactWriteCommandInput, TransactWriteCommandOutput } from '@aws-sdk/lib-dynamodb';
 import { DkCommand } from './Command';
 import { GenericAttributes } from '../util/utils';
-import { UncapitalizeKeys, uncapitalizeKeys, capitalizeKeys } from 'object-key-casing';
 import { applyDefaults } from '../util/defaults';
 import { DkClientConfig } from '../Client';
 import { executeMiddlewares, executeMiddleware } from '../Middleware';
-import { ConditionCheck, Delete, Put, Update } from '@aws-sdk/client-dynamodb';
+import { ConditionCheck, Delete, Put, TransactWriteItem, Update } from '@aws-sdk/client-dynamodb';
 
 const TRANSACT_WRITE_COMMAND_INPUT_DATA_TYPE = 'TransactWriteCommandInput' as const;
 const TRANSACT_WRITE_COMMAND_INPUT_HOOK = [
@@ -21,44 +20,27 @@ const TRANSACT_WRITE_COMMAND_OUTPUT_HOOK = [
 	TRANSACT_WRITE_COMMAND_OUTPUT_DATA_TYPE
 ] as const;
 
-export interface DkTransactWriteCommandInputConditionCheck<
-	Key extends GenericAttributes | undefined = GenericAttributes
-> extends UncapitalizeKeys<Omit<ConditionCheck, 'Key'>> {
-	type: 'conditionCheck';
-	key: Key;
-}
-
-export interface DkTransactWriteCommandInputPut<Attributes extends GenericAttributes = GenericAttributes>
-	extends UncapitalizeKeys<Omit<Put, 'Item'>> {
-	type: 'put';
-	item: Attributes;
-}
-
-export interface DkTransactWriteCommandInputDelete<Key extends GenericAttributes | undefined = GenericAttributes>
-	extends UncapitalizeKeys<Omit<Delete, 'Key'>> {
-	type: 'delete';
-	key: Key;
-}
-
-export interface DkTransactWriteCommandInputUpdate<Key extends GenericAttributes | undefined = GenericAttributes>
-	extends UncapitalizeKeys<Omit<Update, 'Key'>> {
-	type: 'update';
-	key: Key;
-}
-
 export interface DkTransactWriteCommandInput<
 	Attributes extends GenericAttributes = GenericAttributes,
 	Key extends GenericAttributes = GenericAttributes
-> extends UncapitalizeKeys<Omit<TransactWriteCommandInput, 'TransactItems'>> {
-	requests: Array<
-		| DkTransactWriteCommandInputConditionCheck<Key>
-		| DkTransactWriteCommandInputPut<Attributes>
-		| DkTransactWriteCommandInputDelete<Key>
-		| DkTransactWriteCommandInputUpdate<Key>
-	>;
+> extends Omit<TransactWriteCommandInput, 'TransactItems'> {
+	TransactItems: (Omit<TransactWriteItem, 'ConditionCheck' | 'Put' | 'Delete' | 'Update'> & {
+		ConditionCheck?: Omit<ConditionCheck, 'Key'> & {
+			Key: Key;
+		};
+		Delete?: Omit<Delete, 'Key'> & {
+			Key: Key;
+		};
+		Put?: Omit<Put, 'Item'> & {
+			Item: Attributes;
+		};
+		Update?: Omit<Update, 'Key'> & {
+			Key: Key;
+		};
+	})[];
 }
 
-export interface DkTransactWriteCommandOutput extends UncapitalizeKeys<TransactWriteCommandOutput> {}
+export interface DkTransactWriteCommandOutput extends TransactWriteCommandOutput {}
 
 export class DkTransactWriteCommand<
 	Attributes extends GenericAttributes = GenericAttributes,
@@ -88,8 +70,8 @@ export class DkTransactWriteCommand<
 
 	handleInput = async ({ defaults, middleware }: DkClientConfig): Promise<TransactWriteCommandInput> => {
 		const postDefaultsInput = applyDefaults(this.input, defaults, [
-			'returnConsumedCapacity',
-			'returnItemCollectionMetrics'
+			'ReturnConsumedCapacity',
+			'ReturnItemCollectionMetrics'
 		]);
 
 		const { data: postMiddlewareInput } = await executeMiddlewares(
@@ -101,61 +83,24 @@ export class DkTransactWriteCommand<
 			middleware
 		);
 
-		const { requests, ...rest } = postMiddlewareInput;
-
-		const formattedInput = {
-			transactItems: requests.map(request => {
-				if (request.type === 'conditionCheck') {
-					return {
-						ConditionCheck: capitalizeKeys(request)
-					};
-				}
-
-				if (request.type === 'put') {
-					return {
-						Put: capitalizeKeys(request)
-					};
-				}
-
-				if (request.type === 'delete') {
-					return {
-						Delete: capitalizeKeys(request)
-					};
-				}
-
-				if (request.type === 'update') {
-					return {
-						Update: capitalizeKeys(request)
-					};
-				}
-
-				return {};
-			}),
-			...rest
-		};
-
-		const upperCaseInput = capitalizeKeys(formattedInput);
-
-		return upperCaseInput;
+		return postMiddlewareInput;
 	};
 
 	handleOutput = async (
 		output: TransactWriteCommandOutput,
 		{ middleware }: DkClientConfig
 	): Promise<DkTransactWriteCommandOutput> => {
-		const lowerCaseOutput = uncapitalizeKeys(output);
-
 		const { data: postMiddlewareOutput } = await executeMiddlewares(
 			[...this.outputMiddlewareConfig.hooks],
 			{
 				dataType: this.outputMiddlewareConfig.dataType,
-				data: lowerCaseOutput
+				data: output
 			},
 			middleware
 		);
 
-		if (postMiddlewareOutput.consumedCapacity) {
-			for (const consumedCapacity of postMiddlewareOutput.consumedCapacity) {
+		if (postMiddlewareOutput.ConsumedCapacity) {
+			for (const consumedCapacity of postMiddlewareOutput.ConsumedCapacity) {
 				await executeMiddleware(
 					'ConsumedCapacity',
 					{ dataType: 'ConsumedCapacity', data: consumedCapacity },
@@ -164,10 +109,10 @@ export class DkTransactWriteCommand<
 			}
 		}
 
-		if (postMiddlewareOutput.itemCollectionMetrics) {
+		if (postMiddlewareOutput.ItemCollectionMetrics) {
 			await executeMiddleware(
 				'ItemCollectionMetrics',
-				{ dataType: 'ItemCollectionMetrics', data: postMiddlewareOutput.itemCollectionMetrics },
+				{ dataType: 'ItemCollectionMetrics', data: postMiddlewareOutput.ItemCollectionMetrics },
 				middleware
 			);
 		}

@@ -95,8 +95,23 @@ module.exports = {
 			AttributeDefinitions: [
 				{ AttributeName: 'pk', AttributeType: 'S' },
 				{ AttributeName: 'sk', AttributeType: 'S' },
+				{ AttributeName: 'gsi0Pk', AttributeType: 'S' },
+				{ AttributeName: 'gsi0Sk', AttributeType: 'S' },
 			],
 			ProvisionedThroughput: { ReadCapacityUnits: 1, WriteCapacityUnits: 1 },
+			GlobalSecondaryIndexes: [
+				{
+					IndexName: 'gsi0',
+					KeySchema: [
+						{ AttributeName: 'gsi0Pk', KeyType: 'HASH' },
+						{ AttributeName: 'gsi0Sk', KeyType: 'RANGE' }
+					],
+					Projection: {
+						ProjectionType: 'ALL'
+					},
+					ProvisionedThroughput: { ReadCapacityUnits: 1, WriteCapacityUnits: 1 }
+				}
+			]
 		},
 		{
 			TableName: `resetTest`,

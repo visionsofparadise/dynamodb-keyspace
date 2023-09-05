@@ -5,16 +5,15 @@ import { DkQueryCommand, DkQueryCommandInput, DkQueryCommandOutput } from '../co
 import { DkClient } from '../Client';
 
 export interface ListParams<Index extends string | never | undefined> {
-	index?: Index;
-	pageLimit?: number;
-	totalLimit?: number;
-	autoPage?: boolean;
+	IndexName?: Index;
+	PageLimit?: number;
+	AutoPage?: boolean;
 }
 
 export interface QueryItemsInput<
 	Index extends string | never | undefined = undefined,
 	CursorKey extends GenericAttributes = GenericAttributes
-> extends Omit<DkQueryCommandInput<CursorKey>, 'tableName' | 'index' | 'limit'>,
+> extends Omit<DkQueryCommandInput<CursorKey>, 'TableName' | 'IndexName'>,
 		ListParams<Index> {}
 
 export type QueryItemsOutput<
@@ -34,41 +33,41 @@ export const queryTableItems = async <
 		totalCount: number,
 		pageCursorKey?: Table.GetIndexCursorKey<T, Index & string>
 	): Promise<QueryItemsOutput<Table.GetAttributes<T>, Table.GetIndexCursorKey<T, Index & string>>> => {
-		const { autoPage, pageLimit, totalLimit, ...inputRest } = input;
+		const { AutoPage, PageLimit, Limit, ...inputRest } = input;
 
 		const output = await dkClient.send(
 			new DkQueryCommand<Table.GetAttributes<T>, Table.GetIndexCursorKey<T, Index & string>>({
 				...inputRest,
-				tableName: Table.tableName,
-				cursorKey: pageCursorKey,
-				limit: pageLimit
+				TableName: Table.name,
+				ExclusiveStartKey: pageCursorKey,
+				Limit: PageLimit
 			})
 		);
 
-		const { items, cursorKey, count = 0, ...rest } = output;
+		const { Items, LastEvaluatedKey, Count = 0, ...rest } = output;
 
-		const newTotalCount = totalCount + items.length;
+		const newTotalCount = totalCount + Items.length;
 
-		if (!autoPage || !cursorKey || (totalLimit && newTotalCount >= totalLimit)) {
+		if (!AutoPage || !LastEvaluatedKey || (Limit && newTotalCount >= Limit)) {
 			return {
-				items: items.slice(0, totalLimit),
-				cursorKey,
-				count,
+				Items: Items.slice(0, Limit),
+				LastEvaluatedKey,
+				Count,
 				...rest
 			};
 		}
 
-		const nextPage = await recurse(newTotalCount, cursorKey);
+		const nextPage = await recurse(newTotalCount, LastEvaluatedKey);
 
 		return {
-			items: [...items, ...nextPage.items].slice(0, totalLimit),
-			cursorKey: nextPage.cursorKey,
-			count: count + (nextPage.count || 0),
+			Items: [...Items, ...nextPage.Items].slice(0, Limit),
+			LastEvaluatedKey: nextPage.LastEvaluatedKey,
+			Count: Count + (nextPage.Count || 0),
 			...rest
 		};
 	};
 
-	return recurse(0, input?.cursorKey);
+	return recurse(0, input?.ExclusiveStartKey);
 };
 
 export const queryItems = async <
@@ -82,7 +81,7 @@ export const queryItems = async <
 
 	return {
 		...output,
-		items: output.items.map(item => {
+		Items: output.Items.map(item => {
 			KeySpace.assertAttributesAndKeys(item);
 
 			return KeySpace.omitIndexKeys(item);

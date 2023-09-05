@@ -5,15 +5,15 @@ import {
 } from '@aws-sdk/client-dynamodb';
 
 export interface DkReturnParams {
-	returnConsumedCapacity?: ReturnConsumedCapacity;
-	returnItemCollectionMetrics?: ReturnItemCollectionMetrics;
-	returnValuesOnConditionCheckFailure?: ReturnValuesOnConditionCheckFailure;
+	ReturnConsumedCapacity?: ReturnConsumedCapacity;
+	ReturnItemCollectionMetrics?: ReturnItemCollectionMetrics;
+	ReturnValuesOnConditionCheckFailure?: ReturnValuesOnConditionCheckFailure;
 }
 
 export interface Defaults
 	extends Pick<
 		DkReturnParams,
-		'returnConsumedCapacity' | 'returnItemCollectionMetrics' | 'returnValuesOnConditionCheckFailure'
+		'ReturnConsumedCapacity' | 'ReturnItemCollectionMetrics' | 'ReturnValuesOnConditionCheckFailure'
 	> {}
 
 export const applyDefaults = <Input extends object>(

@@ -16,13 +16,13 @@ it('it puts 50 items', async () => {
 
 	const result = await TestClient.send(
 		new DkBatchWriteCommand({
-			requests: {
-				[TABLE_NAME]: items.map(i => ({ put: i }))
+			RequestItems: {
+				[TABLE_NAME]: items.map(Item => ({ PutRequest: { Item } }))
 			}
 		})
 	);
 
-	expect(result.unprocessedRequests[TABLE_NAME]).toBeUndefined();
+	expect(result.UnprocessedItems[TABLE_NAME]).toBeUndefined();
 });
 
 it('it deletes 50 items', async () => {
@@ -46,11 +46,11 @@ it('it deletes 50 items', async () => {
 
 	const result = await TestClient.send(
 		new DkBatchWriteCommand({
-			requests: {
-				[TABLE_NAME]: items.map(({ pk, sk }) => ({ delete: { pk, sk } }))
+			RequestItems: {
+				[TABLE_NAME]: items.map(({ pk, sk }) => ({ DeleteRequest: { Key: { pk, sk } } }))
 			}
 		})
 	);
 
-	expect(result.unprocessedRequests[TABLE_NAME]).toBeUndefined();
+	expect(result.UnprocessedItems[TABLE_NAME]).toBeUndefined();
 });

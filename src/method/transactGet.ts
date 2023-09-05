@@ -4,7 +4,7 @@ import { GenericAttributes } from '../util/utils';
 import { Table } from '../Table';
 import { DkClient } from '../Client';
 
-export interface TransactGetItemsInput extends Omit<DkTransactGetCommandInput, 'requests'> {}
+export interface TransactGetItemsInput extends Omit<DkTransactGetCommandInput, 'TransactItems'> {}
 
 export type TransactGetItemsOutput<Attributes extends GenericAttributes = GenericAttributes> = Array<Attributes>;
 
@@ -17,11 +17,11 @@ export const transactGetTableItems = async <T extends Table = Table>(
 	const output = await dkClient.send(
 		new DkTransactGetCommand<Table.GetAttributes<T>, Table.GetIndexKey<T, T['primaryIndex']>>({
 			...input,
-			requests: keys.map(key => ({ tableName: Table.tableName, key }))
+			TransactItems: keys.map(Key => ({ Get: { TableName: Table.name, Key } }))
 		})
 	);
 
-	return output.items;
+	return output.Responses;
 };
 
 export const transactGetItems = async <K extends KeySpace = KeySpace>(

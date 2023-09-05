@@ -6,7 +6,7 @@ import { Table } from '../Table';
 import { DkClient } from '../Client';
 
 export interface PutItemInput<RV extends DkPutReturnValues = undefined>
-	extends Omit<DkPutCommandInput<any, RV>, 'tableName' | 'item'> {}
+	extends Omit<DkPutCommandInput<any, RV>, 'TableName' | 'Item'> {}
 
 export type PutItemsOutput<
 	Attributes extends GenericAttributes = GenericAttributes,
@@ -22,12 +22,12 @@ export const putTableItem = async <T extends Table = Table, RV extends DkPutRetu
 	const output = await dkClient.send(
 		new DkPutCommand<Table.GetAttributes<T>, RV>({
 			...input,
-			tableName: Table.tableName,
-			item
+			TableName: Table.name,
+			Item: item
 		})
 	);
 
-	return output.attributes;
+	return output.Attributes;
 };
 
 export const putItem = async <K extends KeySpace = KeySpace, RV extends DkPutReturnValues = undefined>(

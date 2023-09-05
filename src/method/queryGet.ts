@@ -26,20 +26,20 @@ export const queryGetTableItem = async <T extends Table = Table, Index extends T
 		Table,
 		{
 			...input,
-			index: setIndex,
-			pageLimit: 1,
-			keyConditionExpression: keyEntries.map(([key]) => `${key} = :${key}`).join(' AND '),
-			expressionAttributeValues: {
+			IndexName: setIndex,
+			PageLimit: 1,
+			KeyConditionExpression: keyEntries.map(([key]) => `${key} = :${key}`).join(' AND '),
+			ExpressionAttributeValues: {
 				...Object.fromEntries(keyEntries.map(([key, value]) => [`:${key}`, value])),
-				...input?.expressionAttributeValues
+				...input?.ExpressionAttributeValues
 			}
 		},
 		dkClient
 	);
 
-	if (!output.items[0]) throw new Error('Not Found');
+	if (!output.Items[0]) throw new Error('Not Found');
 
-	return output.items[0];
+	return output.Items[0];
 };
 
 export const queryGetItem = async <K extends KeySpace = KeySpace, Index extends K['indexes'][number] | never = never>(

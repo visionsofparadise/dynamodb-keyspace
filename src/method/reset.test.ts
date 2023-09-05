@@ -43,11 +43,11 @@ it('reset deletes all items', async () => {
 
 	const beforeReset = await scanTableItems(ResetTable);
 
-	expect(beforeReset.items.length).toBe(10);
+	expect(beforeReset.Items.length).toBe(10);
 
 	await resetTableItems(ResetTable);
 
 	const result = await scanTableItems(ResetTable);
 
-	expect(result.items.length).toBe(0);
+	expect(result.Items.length).toBe(0);
 });

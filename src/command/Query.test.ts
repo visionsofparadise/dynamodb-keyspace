@@ -19,7 +19,7 @@ it('query returns list of items', async () => {
 
 		await DocumentClient.send(
 			new PutCommand({
-				TableName: ManyGsiTable.tableName,
+				TableName: ManyGsiTable.name,
 				Item: item
 			})
 		);
@@ -27,17 +27,17 @@ it('query returns list of items', async () => {
 
 	const result = await TestClient.send(
 		new DkQueryCommand({
-			tableName: TABLE_NAME,
-			keyConditionExpression: 'pk = :pk',
-			expressionAttributeValues: {
+			TableName: TABLE_NAME,
+			KeyConditionExpression: 'pk = :pk',
+			ExpressionAttributeValues: {
 				':pk': hash
 			}
 		})
 	);
 
-	const itemsTypeCheck: A.Equals<(typeof result)['items'], Array<GenericAttributes>> = 1;
+	const itemsTypeCheck: A.Equals<(typeof result)['Items'], Array<GenericAttributes>> = 1;
 
 	expect(itemsTypeCheck).toBe(1);
 
-	expect(result.items.length).toBe(10);
+	expect(result.Items.length).toBe(10);
 });

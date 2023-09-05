@@ -32,11 +32,11 @@ it('it puts 50 items', async () => {
 	const result = await batchWriteTableItems(
 		NoGsiTable,
 		updatedItems.map(item => {
-			return { put: NoGsiKeySpace.withIndexKeys(item) };
+			return { Put: NoGsiKeySpace.withIndexKeys(item) };
 		})
 	);
 
-	expect(result.unprocessedRequests.length).toBe(0);
+	expect(result.UnprocessedItems.length).toBe(0);
 });
 
 it('it deletes 50 items', async () => {
@@ -62,9 +62,9 @@ it('it deletes 50 items', async () => {
 	const result = await batchWriteTableItems(
 		NoGsiTable,
 		items.map(item => {
-			return { delete: NoGsiKeySpace.keyOf(item) };
+			return { Delete: NoGsiKeySpace.keyOf(item) };
 		})
 	);
 
-	expect(result.unprocessedRequests.length).toBe(0);
+	expect(result.UnprocessedItems.length).toBe(0);
 });

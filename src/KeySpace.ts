@@ -1,7 +1,6 @@
 import { PrimaryIndex, Table, primaryIndex } from './Table';
-import { GenericAttributes, Remap } from './util/utils';
+import { GenericAttributes, IntersectOf, Remap } from './util/utils';
 import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
-import { U } from 'ts-toolbelt';
 import { appendMiddleware } from './Middleware';
 import { DkClient, DkClientConfig } from './Client';
 
@@ -20,7 +19,7 @@ export namespace KeySpace {
 	};
 
 	export type GetIndexKey<K extends KeySpace, Index extends K['indexes'][number]> = Remap<
-		U.IntersectOf<KeySpace.GetIndexKeyMap<K>[Index]>
+		IntersectOf<KeySpace.GetIndexKeyMap<K>[Index]>
 	>;
 
 	export type GetAttributes<K extends KeySpace> = Parameters<K['indexKeysOf']>[0];
@@ -35,7 +34,7 @@ export namespace KeySpace {
 	};
 
 	export type GetIndexKeyValueParamsMap<K extends KeySpace> = {
-		[x in K['indexes'][number]]: U.IntersectOf<
+		[x in K['indexes'][number]]: IntersectOf<
 			Exclude<GetIndexValueParamsMap<K>[x][keyof GetIndexValueParamsMap<K>[x]], undefined>
 		>;
 	};
@@ -79,8 +78,6 @@ export class KeySpace<
 	client: DynamoDBDocumentClient;
 	dkClient: DkClient;
 
-	tableName: string;
-
 	indexValueHandlers: IndexValueHandlers;
 
 	constructor(
@@ -95,7 +92,6 @@ export class KeySpace<
 		this.dkClient.setMiddleware(appendMiddleware(this.dkClient.middleware, config.middleware || []));
 		this.dkClient.setLogger(config.logger);
 
-		this.tableName = Table.config.name;
 		this.indexValueHandlers = config.indexValueHandlers;
 	}
 

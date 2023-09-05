@@ -3,7 +3,7 @@ import { Table } from '../Table';
 import { PutItemInput, putTableItem } from './put';
 import { DkClient } from '../Client';
 
-export interface CreateItemInput extends Omit<PutItemInput, 'returnValues'> {}
+export interface CreateItemInput extends Omit<PutItemInput, 'ReturnValues'> {}
 
 export type CreateItemOutput = void;
 
@@ -18,12 +18,12 @@ export const createTableItem = async <T extends Table = Table>(
 		item,
 		{
 			...input,
-			conditionExpression: `attribute_not_exists(#hashKey)${
-				input?.conditionExpression ? ` ${input?.conditionExpression}` : ''
+			ConditionExpression: `attribute_not_exists(#hashKey)${
+				input?.ConditionExpression ? ` ${input?.ConditionExpression}` : ''
 			}`,
-			expressionAttributeNames: {
+			ExpressionAttributeNames: {
 				'#hashKey': Table.config.indexes.primaryIndex.hash.key,
-				...input?.expressionAttributeNames
+				...input?.ExpressionAttributeNames
 			}
 		},
 		dkClient

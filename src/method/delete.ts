@@ -6,7 +6,7 @@ import { Table } from '../Table';
 import { DkClient } from '../Client';
 
 export interface DeleteItemInput<RV extends DkDeleteReturnValues = undefined>
-	extends Omit<DkDeleteCommandInput<any, RV>, 'tableName' | 'key'> {}
+	extends Omit<DkDeleteCommandInput<any, RV>, 'TableName' | 'Key'> {}
 
 export type DeleteItemOutput<
 	Attributes extends GenericAttributes = GenericAttributes,
@@ -22,12 +22,12 @@ export const deleteTableItem = async <T extends Table = Table, RV extends DkDele
 	const output = await dkClient.send(
 		new DkDeleteCommand<Table.GetAttributes<T>, Table.GetIndexKey<T, T['primaryIndex']>, RV>({
 			...input,
-			tableName: Table.tableName,
-			key
+			TableName: Table.name,
+			Key: key
 		})
 	);
 
-	return output.attributes;
+	return output.Attributes;
 };
 
 export const deleteItem = async <K extends KeySpace = KeySpace, RV extends DkDeleteReturnValues = undefined>(

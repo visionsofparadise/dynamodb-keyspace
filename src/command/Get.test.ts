@@ -9,44 +9,44 @@ import { DkGetCommand } from './Get';
 it('gets a put item', async () => {
 	const string = randomString();
 
-	const item = {
+	const Item = {
 		pk: string,
 		sk: string
 	};
 
 	await DocumentClient.send(
 		new PutCommand({
-			TableName: ManyGsiTable.tableName,
-			Item: item
+			TableName: ManyGsiTable.name,
+			Item
 		})
 	);
 
 	const result = await TestClient.send(
 		new DkGetCommand({
-			tableName: TABLE_NAME,
-			key: item
+			TableName: TABLE_NAME,
+			Key: Item
 		})
 	);
 
-	const resultTypeCheck: A.Equals<(typeof result)['item'], GenericAttributes> = 1;
+	const resultTypeCheck: A.Equals<(typeof result)['Item'], GenericAttributes> = 1;
 
 	expect(resultTypeCheck).toBe(1);
 
-	expect(result.item).toStrictEqual(item);
+	expect(result.Item).toStrictEqual(Item);
 });
 
 it('throws on not found', async () => {
 	const string = randomString();
 
-	const item = {
+	const Item = {
 		pk: string,
 		sk: string
 	};
 
 	await TestClient.send(
 		new DkGetCommand({
-			tableName: TABLE_NAME,
-			key: item
+			TableName: TABLE_NAME,
+			Key: Item
 		})
 	).catch(error => expect(error).toBeDefined());
 });

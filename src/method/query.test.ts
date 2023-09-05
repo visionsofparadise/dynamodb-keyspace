@@ -25,17 +25,17 @@ it('query returns list of items', async () => {
 	}
 
 	const result = await queryItems(NoGsiKeySpace, {
-		keyConditionExpression: 'pk = :pk',
-		expressionAttributeValues: {
+		KeyConditionExpression: 'pk = :pk',
+		ExpressionAttributeValues: {
 			':pk': string
 		}
 	});
 
-	const itemsTypeCheck: A.Equals<(typeof result)['items'], Array<TestItem>> = 1;
+	const itemsTypeCheck: A.Equals<(typeof result)['Items'], Array<TestItem>> = 1;
 
 	expect(itemsTypeCheck).toBe(1);
 
-	expect(result.items.length).toBe(10);
+	expect(result.Items.length).toBe(10);
 });
 
 it('auto pages to total limit', async () => {
@@ -58,18 +58,18 @@ it('auto pages to total limit', async () => {
 	}
 
 	const result = await queryItems(NoGsiKeySpace, {
-		keyConditionExpression: 'pk = :pk',
-		expressionAttributeValues: {
+		KeyConditionExpression: 'pk = :pk',
+		ExpressionAttributeValues: {
 			':pk': string
 		},
-		pageLimit: 3,
-		totalLimit: 6,
-		autoPage: true
+		Limit: 6,
+		PageLimit: 3,
+		AutoPage: true
 	});
 
-	expect(result.items.length).toBe(6);
-	expect(result.cursorKey).toBeDefined();
-	expect(result.count).toBe(6);
+	expect(result.Items.length).toBe(6);
+	expect(result.LastEvaluatedKey).toBeDefined();
+	expect(result.Count).toBe(6);
 });
 
 it('auto pages all items', async () => {
@@ -92,15 +92,15 @@ it('auto pages all items', async () => {
 	}
 
 	const result = await queryItems(NoGsiKeySpace, {
-		keyConditionExpression: 'pk = :pk',
-		expressionAttributeValues: {
+		KeyConditionExpression: 'pk = :pk',
+		ExpressionAttributeValues: {
 			':pk': string
 		},
-		pageLimit: 3,
-		autoPage: true
+		PageLimit: 3,
+		AutoPage: true
 	});
 
-	expect(result.items.length).toBe(10);
-	expect(result.cursorKey).toBeUndefined();
-	expect(result.count).toBe(10);
+	expect(result.Items.length).toBe(10);
+	expect(result.LastEvaluatedKey).toBeUndefined();
+	expect(result.Count).toBe(10);
 });

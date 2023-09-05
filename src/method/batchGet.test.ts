@@ -29,5 +29,5 @@ it('it gets 120 items', async () => {
 		items.map(item => NoGsiKeySpace.keyOf(item))
 	);
 
-	expect(result.items.length).toBe(120);
+	expect(result.Responses.length).toBe(120);
 });

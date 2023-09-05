@@ -1,12 +1,11 @@
 import { DeleteCommand, DeleteCommandInput, DeleteCommandOutput } from '@aws-sdk/lib-dynamodb';
 import { DkCommand } from './Command';
 import { GenericAttributes } from '../util/utils';
-import { UncapitalizeKeys, uncapitalizeKeys, capitalizeKeys } from 'object-key-casing';
 import { applyDefaults } from '../util/defaults';
 import { DkClientConfig } from '../Client';
 import { executeMiddlewares, executeMiddleware } from '../Middleware';
 import { ReturnValue } from '@aws-sdk/client-dynamodb';
-import { ReturnValuesAttributes, assertReturnValuesAttributes } from '../util/returnValuesAttributes';
+import { ReturnValuesAttributes } from '../util/returnValuesAttributes';
 
 const DELETE_COMMAND_INPUT_DATA_TYPE = 'DeleteCommandInput' as const;
 const DELETE_COMMAND_INPUT_HOOK = ['CommandInput', 'WriteCommandInput', DELETE_COMMAND_INPUT_DATA_TYPE] as const;
@@ -19,16 +18,16 @@ export type DkDeleteReturnValues = Extract<ReturnValue, 'ALL_OLD' | 'NONE'> | un
 export interface DkDeleteCommandInput<
 	Key extends GenericAttributes = GenericAttributes,
 	ReturnValues extends DkDeleteReturnValues = undefined
-> extends UncapitalizeKeys<Omit<DeleteCommandInput, 'Key'>> {
-	key: Key;
-	returnValues?: ReturnValues;
+> extends Omit<DeleteCommandInput, 'Key' | 'ReturnValues'> {
+	Key: Key;
+	ReturnValues?: ReturnValues;
 }
 
 export interface DkDeleteCommandOutput<
 	Attributes extends GenericAttributes = GenericAttributes,
 	ReturnValues extends DkDeleteReturnValues = undefined
-> extends UncapitalizeKeys<Omit<DeleteCommandOutput, 'Attributes'>> {
-	attributes: ReturnValuesAttributes<Attributes, ReturnValues>;
+> extends Omit<DeleteCommandOutput, 'Attributes'> {
+	Attributes: ReturnValuesAttributes<Attributes, ReturnValues>;
 }
 
 export class DkDeleteCommand<
@@ -54,65 +53,49 @@ export class DkDeleteCommand<
 
 	handleInput = async ({ defaults, middleware }: DkClientConfig): Promise<DeleteCommandInput> => {
 		const postDefaultsInput = applyDefaults(this.input, defaults, [
-			'returnConsumedCapacity',
-			'returnItemCollectionMetrics',
-			'returnValuesOnConditionCheckFailure'
+			'ReturnConsumedCapacity',
+			'ReturnItemCollectionMetrics',
+			'ReturnValuesOnConditionCheckFailure'
 		]);
-
-		const formattedInput = {
-			...postDefaultsInput,
-			returnValues: postDefaultsInput.returnValues || undefined
-		};
 
 		const { data: postMiddlewareInput } = await executeMiddlewares(
 			[...this.inputMiddlewareConfig.hooks],
 			{
 				dataType: this.inputMiddlewareConfig.dataType,
-				data: formattedInput
+				data: postDefaultsInput
 			},
 			middleware
 		);
 
-		const upperCaseInput = capitalizeKeys(postMiddlewareInput);
-
-		return upperCaseInput;
+		return postMiddlewareInput;
 	};
 
 	handleOutput = async (
 		output: DeleteCommandOutput,
 		{ middleware }: DkClientConfig
 	): Promise<DkDeleteCommandOutput<Attributes, ReturnValues>> => {
-		const lowerCaseOutput = uncapitalizeKeys(output);
-
-		const attributes = output.Attributes as Attributes | undefined;
-
-		assertReturnValuesAttributes(attributes, this.input.returnValues);
-
-		const formattedOutput: DkDeleteCommandOutput<Attributes, ReturnValues> = {
-			...lowerCaseOutput,
-			attributes
-		};
+		const typedOutput = output as DkDeleteCommandOutput<Attributes, ReturnValues>;
 
 		const { data: postMiddlewareOutput } = await executeMiddlewares(
 			[...this.outputMiddlewareConfig.hooks],
 			{
 				dataType: this.outputMiddlewareConfig.dataType,
-				data: formattedOutput
+				data: typedOutput
 			},
 			middleware
 		);
 
-		if (postMiddlewareOutput.consumedCapacity)
+		if (postMiddlewareOutput.ConsumedCapacity)
 			await executeMiddleware(
 				'ConsumedCapacity',
-				{ dataType: 'ConsumedCapacity', data: postMiddlewareOutput.consumedCapacity },
+				{ dataType: 'ConsumedCapacity', data: postMiddlewareOutput.ConsumedCapacity },
 				middleware
 			);
 
-		if (postMiddlewareOutput.itemCollectionMetrics)
+		if (postMiddlewareOutput.ItemCollectionMetrics)
 			await executeMiddleware(
 				'ItemCollectionMetrics',
-				{ dataType: 'ItemCollectionMetrics', data: postMiddlewareOutput.itemCollectionMetrics },
+				{ dataType: 'ItemCollectionMetrics', data: postMiddlewareOutput.ItemCollectionMetrics },
 				middleware
 			);
 

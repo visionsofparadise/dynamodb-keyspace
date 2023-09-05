@@ -18,7 +18,7 @@ it('it gets 10 items', async () => {
 	for (const item of items) {
 		await DocumentClient.send(
 			new PutCommand({
-				TableName: ManyGsiTable.tableName,
+				TableName: ManyGsiTable.name,
 				Item: NoGsiKeySpace.withIndexKeys(item)
 			})
 		);

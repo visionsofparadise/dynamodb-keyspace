@@ -13,11 +13,7 @@ export { DkTransactGetCommand, DkTransactGetCommandInput, DkTransactGetCommandOu
 export {
 	DkTransactWriteCommand,
 	DkTransactWriteCommandInput,
-	DkTransactWriteCommandOutput,
-	DkTransactWriteCommandInputConditionCheck,
-	DkTransactWriteCommandInputDelete,
-	DkTransactWriteCommandInputPut,
-	DkTransactWriteCommandInputUpdate
+	DkTransactWriteCommandOutput
 } from './command/TransactWrite';
 export { DkUpdateCommand, DkUpdateCommandInput, DkUpdateCommandOutput, DkUpdateReturnValues } from './command/Update';
 

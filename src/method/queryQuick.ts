@@ -11,7 +11,7 @@ export type QueryQuickItemsInput<
 	HashKeyParams extends any = any
 > = Omit<QueryItemsInput<Index, CursorKey>, 'keyConditionExpression'> &
 	DkQuickQueryOperators & {
-		hashKeyParams: HashKeyParams;
+		HashKeyParams: HashKeyParams;
 	};
 
 export type QueryQuickItemsOutput<
@@ -33,26 +33,26 @@ export const queryQuickTableItems = async <
 	>,
 	dkClient: DkClient = Table.dkClient
 ): Promise<QueryQuickItemsOutput<Table.GetAttributes<T>, Table.GetIndexCursorKey<T, Index & string>>> => {
-	const index = input.index || primaryIndex;
+	const index = input.IndexName || primaryIndex;
 
-	const { hashKeyParams, beginsWith, greaterThan, lessThan, ...inputRest } = input;
+	const { HashKeyParams, BeginsWith, GreaterThan, LessThan, ...inputRest } = input;
 
 	const hashKey = Table.config.indexes[index].hash.key;
-	const hashValue = hashKeyParams![hashKey as keyof typeof hashKeyParams];
+	const hashValue = HashKeyParams![hashKey as keyof typeof HashKeyParams];
 
 	const sortKey = Table.config.indexes[index].sort?.key;
 
-	const sortParams = createQueryQuickSort(sortKey, { beginsWith, greaterThan, lessThan });
+	const sortParams = createQueryQuickSort(sortKey, { BeginsWith, GreaterThan, LessThan });
 
 	const output = await queryTableItems(
 		Table,
 		{
 			...inputRest,
-			keyConditionExpression: `${hashKey} = :hashValue ${sortParams.keyConditionExpression || ''}`,
-			expressionAttributeValues: {
+			KeyConditionExpression: `${hashKey} = :hashValue ${sortParams.KeyConditionExpression || ''}`,
+			ExpressionAttributeValues: {
 				[`:hashValue`]: hashValue,
-				...sortParams.expressionAttributeValues,
-				...input.expressionAttributeValues
+				...sortParams.ExpressionAttributeValues,
+				...input.ExpressionAttributeValues
 			}
 		},
 		dkClient
@@ -74,23 +74,23 @@ export const queryQuickItems = async <
 			: KeySpace.GetIndexHashKeyValueParamsMap<K>[K['primaryIndex']]
 	>
 ): Promise<QueryQuickItemsOutput<KeySpace.GetAttributes<K>, Table.GetIndexCursorKey<K['Table'], Index>>> => {
-	const index = input.index || primaryIndex;
+	const index = input.IndexName || primaryIndex;
 
 	const hashKeyValue = KeySpace.indexAttributeValue(
 		index,
 		KeySpace.Table.config.indexes[index].hash.key,
-		input.hashKeyParams as any
+		input.HashKeyParams as any
 	);
 
-	const hashKeyParams = {
+	const HashKeyParams = {
 		[KeySpace.Table.config.indexes[index].hash.key]: hashKeyValue
 	};
 
-	const output = await queryQuickTableItems(KeySpace.Table, { ...input, hashKeyParams } as any, KeySpace.dkClient);
+	const output = await queryQuickTableItems(KeySpace.Table, { ...input, HashKeyParams } as any, KeySpace.dkClient);
 
 	return {
 		...output,
-		items: output.items.map(item => {
+		items: output.Items.map(item => {
 			KeySpace.assertAttributesAndKeys(item);
 
 			return KeySpace.omitIndexKeys(item);

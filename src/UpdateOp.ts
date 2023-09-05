@@ -25,11 +25,11 @@ export const dkOp = {
 	Value: <T = any>(value: T) => {
 		const output = new DkOp(({ key, alias, precedingKeys }) => {
 			return {
-				updateExpression: `${attributePath({ alias, precedingKeys })} = :${alias}, `,
-				expressionAttributeNames: {
+				UpdateExpression: `${attributePath({ alias, precedingKeys })} = :${alias}, `,
+				ExpressionAttributeNames: {
 					[`#${alias}`]: key
 				},
-				expressionAttributeValues: {
+				ExpressionAttributeValues: {
 					[`:${alias}`]: value
 				}
 			};
@@ -43,11 +43,11 @@ export const dkOp = {
 			const mappedObject = Object.fromEntries(Object.entries(object).map(([key, value]) => [key, dkOp.Value(value)]));
 
 			const updateExpressionPrecedingKeyPart = {
-				updateExpression: '',
-				expressionAttributeNames: {
+				UpdateExpression: '',
+				ExpressionAttributeNames: {
 					[`#${alias}`]: key
 				},
-				expressionAttributeValues: {}
+				ExpressionAttributeValues: {}
 			};
 
 			const updateExpressionParts = createUpdateExpressionParts(mappedObject, [...(precedingKeys || []), alias]);
@@ -63,11 +63,11 @@ export const dkOp = {
 			const path = attributePath({ alias, precedingKeys });
 
 			return {
-				updateExpression: `${path} = ${path} + :${alias}, `,
-				expressionAttributeNames: {
+				UpdateExpression: `${path} = ${path} + :${alias}, `,
+				ExpressionAttributeNames: {
 					[`#${alias}`]: key
 				},
-				expressionAttributeValues: {
+				ExpressionAttributeValues: {
 					[`:${alias}`]: value
 				}
 			};
@@ -81,11 +81,11 @@ export const dkOp = {
 			const path = attributePath({ alias, precedingKeys });
 
 			return {
-				updateExpression: `${path} = ${path} - :${alias}, `,
-				expressionAttributeNames: {
+				UpdateExpression: `${path} = ${path} - :${alias}, `,
+				ExpressionAttributeNames: {
 					[`#${alias}`]: key
 				},
-				expressionAttributeValues: {
+				ExpressionAttributeValues: {
 					[`:${alias}`]: value
 				}
 			};
@@ -99,11 +99,11 @@ export const dkOp = {
 			const path = attributePath({ alias, precedingKeys });
 
 			return {
-				updateExpression: `${path} = list_append(${end === 'head' ? `:${alias}, ${path}` : `${path}, :${alias}`}), `,
-				expressionAttributeNames: {
+				UpdateExpression: `${path} = list_append(${end === 'head' ? `:${alias}, ${path}` : `${path}, :${alias}`}), `,
+				ExpressionAttributeNames: {
 					[`#${alias}`]: key
 				},
-				expressionAttributeValues: {
+				ExpressionAttributeValues: {
 					[`:${alias}`]: value
 				}
 			};
@@ -117,11 +117,11 @@ export const dkOp = {
 			const path = attributePath({ alias, precedingKeys });
 
 			return {
-				updateExpression: `${path} = if_not_exists(${path}, :${alias}), `,
-				expressionAttributeNames: {
+				UpdateExpression: `${path} = if_not_exists(${path}, :${alias}), `,
+				ExpressionAttributeNames: {
 					[`#${alias}`]: key
 				},
-				expressionAttributeValues: {
+				ExpressionAttributeValues: {
 					[`:${alias}`]: value
 				}
 			};

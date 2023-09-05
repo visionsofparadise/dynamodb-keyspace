@@ -15,15 +15,18 @@ export const dkSetAttributeOnWriteMiddleware = <Attributes extends GenericAttrib
 		handler: ({ data: batchWriteCommandInput }) => {
 			return {
 				...batchWriteCommandInput,
-				requests: Object.fromEntries(
-					Object.entries(batchWriteCommandInput.requests).map(([tableName, requests]) => [
+				RequestItems: Object.fromEntries(
+					Object.entries(batchWriteCommandInput.RequestItems).map(([tableName, RequestItems]) => [
 						tableName,
-						requests.map(request => {
-							if ('put' in request) {
+						RequestItems.map(request => {
+							if ('PutRequest' in request) {
 								return {
-									put: {
-										...request.put,
-										[key]: setter()
+									PutRequest: {
+										...request.PutRequest,
+										Item: {
+											...request.PutRequest.Item,
+											[key]: setter()
+										}
 									}
 								};
 							}
@@ -41,8 +44,8 @@ export const dkSetAttributeOnWriteMiddleware = <Attributes extends GenericAttrib
 		handler: ({ data: putCommandInput }) => {
 			return {
 				...putCommandInput,
-				item: {
-					...putCommandInput.item,
+				Item: {
+					...putCommandInput.Item,
 					[key]: setter()
 				}
 			};
@@ -57,31 +60,45 @@ export const dkSetAttributeOnWriteMiddleware = <Attributes extends GenericAttrib
 		handler: ({ data: transactWriteCommandInput }) => {
 			return {
 				...transactWriteCommandInput,
-				requests: transactWriteCommandInput.requests.map(request => {
-					if (request.type === 'put') {
-						return {
-							...request,
-							item: {
-								...request.item,
-								[key]: setter()
+				TransactItems: transactWriteCommandInput.TransactItems.map(request => {
+					return Object.fromEntries(
+						Object.entries(request).map(([key, value]) => {
+							if (key === 'Put') {
+								return [
+									key,
+									value
+										? {
+												...value,
+												Item: {
+													...(value as any).Item,
+													[key]: setter()
+												}
+										  }
+										: value
+								];
 							}
-						};
-					}
 
-					if (request.type === 'update') {
-						if (!request.updateExpression!.startsWith('SET')) return request;
+							if (key === 'Update') {
+								if (!(value as any).UpdateExpression?.startsWith('SET')) return [key, value];
 
-						return {
-							...request,
-							updateExpression: request.updateExpression + `, ${key} = :${key}`,
-							expressionAttributeValues: {
-								...request.expressionAttributeValues,
-								[`:${key}`]: setter()
+								return [
+									key,
+									value
+										? {
+												...value,
+												UpdateExpression: (value as any).UpdateExpression + `, ${key} = :${key}`,
+												ExpressionAttributeValues: {
+													...value.ExpressionAttributeValues,
+													[`:${key}`]: setter()
+												}
+										  }
+										: value
+								];
 							}
-						};
-					}
 
-					return request;
+							return [key, value];
+						})
+					);
 				})
 			};
 		}
@@ -90,13 +107,13 @@ export const dkSetAttributeOnWriteMiddleware = <Attributes extends GenericAttrib
 	const updateHandler: DkMiddlewareHandler<'UpdateCommandInput', DkCommandGenericData & { Attributes: Attributes }> = {
 		hook: 'UpdateCommandInput',
 		handler: ({ data: updateCommandInput }) => {
-			if (!updateCommandInput.updateExpression!.startsWith('SET')) return;
+			if (!updateCommandInput.UpdateExpression?.startsWith('SET')) return;
 
 			return {
 				...updateCommandInput,
-				updateExpression: updateCommandInput.updateExpression + `, ${key} = :${key}`,
-				expressionAttributeValues: {
-					...updateCommandInput.expressionAttributeValues,
+				UpdateExpression: updateCommandInput.UpdateExpression + `, ${key} = :${key}`,
+				ExpressionAttributeValues: {
+					...updateCommandInput.ExpressionAttributeValues,
 					[`:${key}`]: setter()
 				}
 			};

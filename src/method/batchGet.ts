@@ -1,23 +1,20 @@
-import { KeysAndAttributes } from '@aws-sdk/client-dynamodb';
 import { GenericAttributes } from '../util/utils';
 import { Table } from '../Table';
-import { UncapitalizeKeys } from 'object-key-casing';
-import { DkBatchGetCommand, DkBatchGetCommandInput } from '../command/BatchGet';
+import { DkBatchGetCommand, DkBatchGetCommandInput, DkBatchGetCommandOutput } from '../command/BatchGet';
 import { KeySpace } from '../KeySpace';
 import { DkClient } from '../Client';
 
-export interface BatchGetItemsInput
-	extends Omit<DkBatchGetCommandInput, 'RequestItems'>,
-		UncapitalizeKeys<Omit<KeysAndAttributes, 'Keys' | 'AttributesToGet'>> {
-	pageLimit?: number;
+export interface BatchGetItemsInput<Key extends GenericAttributes = GenericAttributes>
+	extends Omit<DkBatchGetCommandInput<Key>, 'RequestItems'> {
+	PageLimit?: number;
 }
 
 export interface BatchGetItemsOutput<
 	Attributes extends GenericAttributes = GenericAttributes,
 	Key extends GenericAttributes = GenericAttributes
-> {
-	items: Array<Attributes>;
-	unprocessedRequests: UncapitalizeKeys<Omit<KeysAndAttributes, 'Keys' | 'AttributesToGet'>> & { keys: Array<Key> };
+> extends Partial<Omit<DkBatchGetCommandOutput, 'Responses' | 'UnprocessedKeys'>> {
+	Responses: DkBatchGetCommandOutput<Attributes, Key>['Responses'][string];
+	UnprocessedKeys: DkBatchGetCommandOutput<Attributes, Key>['UnprocessedKeys'][string];
 }
 
 export const batchGetTableItems = async <T extends Table = Table>(
@@ -26,18 +23,18 @@ export const batchGetTableItems = async <T extends Table = Table>(
 	input?: BatchGetItemsInput,
 	dkClient: DkClient = Table.dkClient
 ): Promise<BatchGetItemsOutput<Table.GetAttributes<T>, Table.GetIndexKey<T, T['primaryIndex']>>> => {
-	const { pageLimit = 100, returnConsumedCapacity, ...rest } = input || ({} as BatchGetItemsInput);
+	const { PageLimit = 100, ReturnConsumedCapacity, ...rest } = input || ({} as BatchGetItemsInput);
 
 	if (keys.length === 0)
 		return {
-			items: [],
-			unprocessedRequests: {
-				keys: [],
+			Responses: [],
+			UnprocessedKeys: {
+				Keys: [],
 				...rest
 			}
 		};
 
-	const limitedPageLimit = Math.min(pageLimit, 100);
+	const limitedPageLimit = Math.min(PageLimit, 100);
 
 	const recurse = async (
 		remainingKeys: Array<Table.GetIndexKey<T, T['primaryIndex']>>
@@ -46,34 +43,34 @@ export const batchGetTableItems = async <T extends Table = Table>(
 
 		const output = await dkClient.send(
 			new DkBatchGetCommand<Table.GetAttributes<T>, Table.GetIndexKey<T, T['primaryIndex']>>({
-				requests: {
-					[Table.tableName]: {
-						keys: currentKeys,
+				RequestItems: {
+					[Table.name]: {
+						Keys: currentKeys,
 						...rest
 					}
 				},
-				returnConsumedCapacity
+				ReturnConsumedCapacity
 			})
 		);
 
 		const nextRemainingKeys = remainingKeys.slice(limitedPageLimit);
 
-		const items = output.items[Table.tableName];
-		const unprocessedRequests = output.unprocessedRequests[Table.tableName] || { keys: [] };
+		const Responses = output.Responses[Table.name];
+		const UnprocessedKeys = output.UnprocessedKeys[Table.name] || { Keys: [] };
 
 		if (nextRemainingKeys.length === 0) {
 			return {
-				items,
-				unprocessedRequests
+				Responses,
+				UnprocessedKeys
 			};
 		}
 
 		const nextPage = await recurse(nextRemainingKeys);
 
 		return {
-			items: [...items, ...nextPage.items],
-			unprocessedRequests: {
-				keys: [...unprocessedRequests.keys, ...nextPage.unprocessedRequests.keys],
+			Responses: [...Responses, ...nextPage.Responses],
+			UnprocessedKeys: {
+				Keys: [...UnprocessedKeys.Keys, ...(nextPage.UnprocessedKeys?.Keys || [])],
 				...rest
 			}
 		};
@@ -87,19 +84,10 @@ export const batchGetItems = async <K extends KeySpace = KeySpace>(
 	keys: Array<KeySpace.GetIndexKeyValueParams<K, K['primaryIndex']>>,
 	input?: BatchGetItemsInput
 ): Promise<BatchGetItemsOutput<KeySpace.GetAttributes<K>, KeySpace.GetIndexKey<K, K['primaryIndex']>>> => {
-	const output = await batchGetTableItems(
+	return batchGetTableItems<K['Table']>(
 		KeySpace.Table,
 		keys.map(key => KeySpace.keyOf(key), input),
 		input,
 		KeySpace.dkClient
 	);
-
-	return {
-		...output,
-		items: output.items.map(item => {
-			KeySpace.assertAttributesAndKeys(item);
-
-			return KeySpace.omitIndexKeys(item);
-		})
-	} as BatchGetItemsOutput<KeySpace.GetAttributes<K>, KeySpace.GetIndexKey<K, K['primaryIndex']>>;
 };

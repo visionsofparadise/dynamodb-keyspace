@@ -1,11 +1,10 @@
 import { KeySpace } from '../KeySpace';
 import { ReturnValue } from '@aws-sdk/client-dynamodb';
-import { O } from 'ts-toolbelt';
 import { convertObjectToUpdateExpression } from '../util/convertObjectToUpdateExpression';
 import { UpdateItemInput, UpdateItemOutput, updateTableItem } from './update';
 import { AllSchema } from '../util/Schema';
 import { DkOp } from '../UpdateOp';
-import { GenericAttributes } from '../util/utils';
+import { DeepPartial, GenericAttributes, Unionize } from '../util/utils';
 import { Table } from '../Table';
 import { ReturnValuesAttributes } from '../util/returnValuesAttributes';
 import { DkClient } from '../Client';
@@ -24,7 +23,7 @@ export const updateQuickTableItem = async <
 >(
 	Table: T,
 	key: Table.GetIndexKey<T, T['primaryIndex']>,
-	updateAttributes: O.Partial<O.Unionize<Table.GetAttributes<T>, AllSchema<Table.GetAttributes<T>, DkOp>>, 'deep'>,
+	updateAttributes: DeepPartial<Unionize<Table.GetAttributes<T>, AllSchema<Table.GetAttributes<T>, DkOp>>>,
 	input?: UpdateQuickItemInput<RV>,
 	dkClient: DkClient = Table.dkClient
 ): Promise<UpdateQuickItemOutput<Table.GetAttributes<T>, RV>> => {
@@ -36,13 +35,13 @@ export const updateQuickTableItem = async <
 		{
 			...input,
 			...updateExpressionParams,
-			expressionAttributeNames: {
-				...updateExpressionParams.expressionAttributeNames,
-				...input?.expressionAttributeNames
+			ExpressionAttributeNames: {
+				...updateExpressionParams.ExpressionAttributeNames,
+				...input?.ExpressionAttributeNames
 			},
-			expressionAttributeValues: {
-				...updateExpressionParams.expressionAttributeValues,
-				...input?.expressionAttributeValues
+			ExpressionAttributeValues: {
+				...updateExpressionParams.ExpressionAttributeValues,
+				...input?.ExpressionAttributeValues
 			}
 		},
 		dkClient
@@ -57,10 +56,7 @@ export const updateQuickItem = async <
 >(
 	KeySpace: K,
 	keyParams: KeySpace.GetIndexKeyValueParams<K, K['primaryIndex']>,
-	updateAttributes: O.Partial<
-		O.Unionize<KeySpace.GetAttributes<K>, AllSchema<KeySpace.GetAttributes<K>, DkOp>>,
-		'deep'
-	>,
+	updateAttributes: DeepPartial<Unionize<KeySpace.GetAttributes<K>, AllSchema<KeySpace.GetAttributes<K>, DkOp>>>,
 	input?: UpdateQuickItemInput<RV>
 ): Promise<UpdateQuickItemOutput<KeySpace.GetAttributes<K>, RV>> => {
 	const attributes = await updateQuickTableItem(

@@ -2,8 +2,7 @@ import { UpdateCommand, UpdateCommandInput, UpdateCommandOutput } from '@aws-sdk
 import { DkCommand } from './Command';
 import { ReturnValue } from '@aws-sdk/client-dynamodb';
 import { GenericAttributes } from '../util/utils';
-import { ReturnValuesAttributes, assertReturnValuesAttributes } from '../util/returnValuesAttributes';
-import { UncapitalizeKeys, uncapitalizeKeys, capitalizeKeys } from 'object-key-casing';
+import { ReturnValuesAttributes } from '../util/returnValuesAttributes';
 import { applyDefaults } from '../util/defaults';
 import { DkClientConfig } from '../Client';
 import { executeMiddlewares, executeMiddleware } from '../Middleware';
@@ -19,18 +18,16 @@ export type DkUpdateReturnValues = ReturnValue | undefined;
 export interface DkUpdateCommandInput<
 	Key extends GenericAttributes = GenericAttributes,
 	ReturnValues extends DkUpdateReturnValues = DkUpdateReturnValues
-> extends UncapitalizeKeys<
-		Omit<UpdateCommandInput, 'Key' | 'ReturnValues' | 'AttributeUpdates' | 'Expected' | 'ConditionalOperator'>
-	> {
-	key: Key;
-	returnValues?: ReturnValues;
+> extends Omit<UpdateCommandInput, 'Key' | 'ReturnValues' | 'AttributeUpdates' | 'Expected' | 'ConditionalOperator'> {
+	Key: Key;
+	ReturnValues?: ReturnValues;
 }
 
 export interface DkUpdateCommandOutput<
 	Attributes extends GenericAttributes = GenericAttributes,
 	ReturnValues extends DkUpdateReturnValues = DkUpdateReturnValues
-> extends UncapitalizeKeys<Omit<UpdateCommandOutput, 'Attributes'>> {
-	attributes: ReturnValuesAttributes<Attributes, ReturnValues>;
+> extends Omit<UpdateCommandOutput, 'Attributes'> {
+	Attributes: ReturnValuesAttributes<Attributes, ReturnValues>;
 }
 
 export class DkUpdateCommand<
@@ -56,9 +53,9 @@ export class DkUpdateCommand<
 
 	handleInput = async ({ defaults, middleware }: DkClientConfig): Promise<UpdateCommandInput> => {
 		const postDefaultsInput = applyDefaults(this.input, defaults, [
-			'returnConsumedCapacity',
-			'returnItemCollectionMetrics',
-			'returnValuesOnConditionCheckFailure'
+			'ReturnConsumedCapacity',
+			'ReturnItemCollectionMetrics',
+			'ReturnValuesOnConditionCheckFailure'
 		]);
 
 		const { data: postMiddlewareInput } = await executeMiddlewares(
@@ -70,46 +67,35 @@ export class DkUpdateCommand<
 			middleware
 		);
 
-		const upperCaseInput = capitalizeKeys(postMiddlewareInput);
-
-		return upperCaseInput;
+		return postMiddlewareInput;
 	};
 
 	handleOutput = async (
 		output: UpdateCommandOutput,
 		{ middleware }: DkClientConfig
 	): Promise<DkUpdateCommandOutput<Attributes, ReturnValues>> => {
-		const lowerCaseOutput = uncapitalizeKeys(output);
-
-		const attributes = output.Attributes as Attributes | undefined;
-
-		assertReturnValuesAttributes(attributes, this.input.returnValues);
-
-		const formattedOutput: DkUpdateCommandOutput<Attributes, ReturnValues> = {
-			...lowerCaseOutput,
-			attributes
-		};
+		const typedOutput = output as DkUpdateCommandOutput<Attributes, ReturnValues>;
 
 		const { data: postMiddlewareOutput } = await executeMiddlewares(
 			[...this.outputMiddlewareConfig.hooks],
 			{
 				dataType: this.outputMiddlewareConfig.dataType,
-				data: formattedOutput
+				data: typedOutput
 			},
 			middleware
 		);
 
-		if (postMiddlewareOutput.consumedCapacity)
+		if (postMiddlewareOutput.ConsumedCapacity)
 			await executeMiddleware(
 				'ConsumedCapacity',
-				{ dataType: 'ConsumedCapacity', data: postMiddlewareOutput.consumedCapacity },
+				{ dataType: 'ConsumedCapacity', data: postMiddlewareOutput.ConsumedCapacity },
 				middleware
 			);
 
-		if (postMiddlewareOutput.itemCollectionMetrics)
+		if (postMiddlewareOutput.ItemCollectionMetrics)
 			await executeMiddleware(
 				'ItemCollectionMetrics',
-				{ dataType: 'ItemCollectionMetrics', data: postMiddlewareOutput.itemCollectionMetrics },
+				{ dataType: 'ItemCollectionMetrics', data: postMiddlewareOutput.ItemCollectionMetrics },
 				middleware
 			);
 

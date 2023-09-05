@@ -10,7 +10,7 @@ import { GenericAttributes } from '../util/utils';
 it('deletes an existing item', async () => {
 	const string = randomString();
 
-	const item = {
+	const Item = {
 		pk: string,
 		sk: string
 	};
@@ -18,36 +18,36 @@ it('deletes an existing item', async () => {
 	await DocumentClient.send(
 		new PutCommand({
 			TableName: TABLE_NAME,
-			Item: item
+			Item
 		})
 	);
 
 	const result = await TestClient.send(
 		new DkDeleteCommand({
-			tableName: TABLE_NAME,
-			key: item
+			TableName: TABLE_NAME,
+			Key: Item
 		})
 	);
 
-	const resultTypeCheck: A.Equals<(typeof result)['attributes'], undefined> = 1;
+	const resultTypeCheck: A.Equals<(typeof result)['Attributes'], undefined> = 1;
 
 	expect(resultTypeCheck).toBe(1);
 
-	expect(result.attributes).toBeUndefined();
+	expect(result.Attributes).toBeUndefined();
 });
 
 it('throws on deleting not existing item', async () => {
 	const string = randomString();
 
-	const item = {
+	const Item = {
 		pk: string,
 		sk: string
 	};
 
 	await TestClient.send(
 		new DkDeleteCommand({
-			tableName: TABLE_NAME,
-			key: item
+			TableName: TABLE_NAME,
+			Key: Item
 		})
 	).catch(error => expect(error).toBeDefined());
 });
@@ -55,7 +55,7 @@ it('throws on deleting not existing item', async () => {
 it('returns old values', async () => {
 	const string = randomString();
 
-	const item = {
+	const Item = {
 		pk: string,
 		sk: string
 	};
@@ -63,21 +63,21 @@ it('returns old values', async () => {
 	await DocumentClient.send(
 		new PutCommand({
 			TableName: TABLE_NAME,
-			Item: item
+			Item
 		})
 	);
 
 	const result = await TestClient.send(
 		new DkDeleteCommand({
-			tableName: TABLE_NAME,
-			key: item,
-			returnValues: ReturnValue.ALL_OLD
+			TableName: TABLE_NAME,
+			Key: Item,
+			ReturnValues: ReturnValue.ALL_OLD
 		})
 	);
 
-	const resultTypeCheck: A.Equals<(typeof result)['attributes'], GenericAttributes> = 1;
+	const resultTypeCheck: A.Equals<(typeof result)['Attributes'], GenericAttributes> = 1;
 
 	expect(resultTypeCheck).toBe(1);
 
-	expect(result.attributes).toStrictEqual(item);
+	expect(result.Attributes).toStrictEqual(Item);
 });

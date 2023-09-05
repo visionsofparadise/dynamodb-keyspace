@@ -19,16 +19,12 @@
 		"patch": "npm version patch && npm publish",
 		"cdk": "cdk"
 	},
-	"dependencies": {
-		"object-key-casing": "^0.0.2"
-	},
 	"devDependencies": {
 		"@aws-sdk/client-dynamodb": "^3.369.0",
 		"@aws-sdk/lib-dynamodb": "^3.369.0",
 		"@aws-sdk/util-dynamodb": "^3.370.0",
 		"@shelf/jest-dynamodb": "^3.4.1",
 		"@types/jest": "^27.0.3",
-		"@types/lodash": "^4.14.171",
 		"@types/node": "^18.11.5",
 		"aws-cdk": "^2.44.0",
 		"aws-cdk-lib": "^2.44.0",
@@ -47,8 +43,7 @@
 	},
 	"peerDependencies": {
 		"@aws-sdk/client-dynamodb": "^3.369.0",
-		"@aws-sdk/lib-dynamodb": "^3.369.0",
-		"ts-toolbelt": "^9.6.0"
+		"@aws-sdk/lib-dynamodb": "^3.369.0"
 	},
 	"author": {
 		"name": "xKore",

@@ -1,7 +1,6 @@
 import { GetCommand, GetCommandInput, GetCommandOutput } from '@aws-sdk/lib-dynamodb';
 import { DkCommand } from './Command';
 import { GenericAttributes } from '../util/utils';
-import { UncapitalizeKeys, uncapitalizeKeys, capitalizeKeys } from 'object-key-casing';
 import { applyDefaults } from '../util/defaults';
 import { DkClientConfig } from '../Client';
 import { executeMiddlewares, executeMiddleware } from '../Middleware';
@@ -13,13 +12,13 @@ const GET_COMMAND_OUTPUT_DATA_TYPE = 'GetCommandOutput' as const;
 const GET_COMMAND_OUTPUT_HOOK = ['CommandOutput', 'ReadCommandOutput', GET_COMMAND_OUTPUT_DATA_TYPE] as const;
 
 export interface DkGetCommandInput<Key extends GenericAttributes = GenericAttributes>
-	extends UncapitalizeKeys<Omit<GetCommandInput, 'Key'>> {
-	key: Key;
+	extends Omit<GetCommandInput, 'Key'> {
+	Key: Key;
 }
 
 export interface DkGetCommandOutput<Attributes extends GenericAttributes = GenericAttributes>
-	extends UncapitalizeKeys<Omit<GetCommandOutput, 'Item'>> {
-	item: Attributes;
+	extends Omit<GetCommandOutput, 'Item'> {
+	Item: Attributes;
 }
 
 export class DkGetCommand<
@@ -43,7 +42,7 @@ export class DkGetCommand<
 	outputMiddlewareConfig = { dataType: GET_COMMAND_OUTPUT_DATA_TYPE, hooks: GET_COMMAND_OUTPUT_HOOK };
 
 	handleInput = async ({ defaults, middleware }: DkClientConfig): Promise<GetCommandInput> => {
-		const postDefaultsInput = applyDefaults(this.input, defaults, ['returnConsumedCapacity']);
+		const postDefaultsInput = applyDefaults(this.input, defaults, ['ReturnConsumedCapacity']);
 
 		const { data: postMiddlewareInput } = await executeMiddlewares(
 			[...this.inputMiddlewareConfig.hooks],
@@ -54,39 +53,30 @@ export class DkGetCommand<
 			middleware
 		);
 
-		const upperCaseInput = capitalizeKeys(postMiddlewareInput);
-
-		return upperCaseInput;
+		return postMiddlewareInput;
 	};
 
 	handleOutput = async (
 		output: GetCommandOutput,
 		{ middleware }: DkClientConfig
 	): Promise<DkGetCommandOutput<Attributes>> => {
-		const lowerCaseOutput = uncapitalizeKeys(output);
+		if (!output.Item) throw new Error('Item Not Found');
 
-		const item = output.Item as Attributes | undefined;
-
-		if (!item) throw new Error('Item Not Found');
-
-		const formattedOutput: DkGetCommandOutput<Attributes> = {
-			...lowerCaseOutput,
-			item
-		};
+		const typedOutput = output as DkGetCommandOutput<Attributes>;
 
 		const { data: postMiddlewareOutput } = await executeMiddlewares(
 			[...this.outputMiddlewareConfig.hooks],
 			{
 				dataType: this.outputMiddlewareConfig.dataType,
-				data: formattedOutput
+				data: typedOutput
 			},
 			middleware
 		);
 
-		if (postMiddlewareOutput.consumedCapacity)
+		if (postMiddlewareOutput.ConsumedCapacity)
 			await executeMiddleware(
 				'ConsumedCapacity',
-				{ dataType: 'ConsumedCapacity', data: postMiddlewareOutput.consumedCapacity },
+				{ dataType: 'ConsumedCapacity', data: postMiddlewareOutput.ConsumedCapacity },
 				middleware
 			);
 

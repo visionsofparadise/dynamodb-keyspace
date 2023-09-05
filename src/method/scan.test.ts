@@ -60,47 +60,47 @@ beforeAll(async () => {
 it('scan returns list of items', async () => {
 	const result = await scanTableItems(ScanTable);
 
-	const cursorTypeCheck: A.Equals<(typeof result)['cursorKey'], { pk: string; sk: string } | undefined> = 1;
+	const cursorTypeCheck: A.Equals<(typeof result)['LastEvaluatedKey'], { pk: string; sk: string } | undefined> = 1;
 
 	expect(cursorTypeCheck).toBe(1);
 
 	const itemsTypeCheck: A.Equals<
-		(typeof result)['items'],
+		(typeof result)['Items'],
 		Array<{ pk: string; sk: string; gsi0Pk?: string; gsi0Sk?: string }>
 	> = 1;
 
 	expect(itemsTypeCheck).toBe(1);
 
-	expect(result.items.length).toBe(10);
+	expect(result.Items.length).toBe(10);
 });
 
 it('scan on index returns list of items', async () => {
 	const result = await scanTableItems(ScanTable, {
-		index: 'gsi0'
+		IndexName: 'gsi0'
 	});
 
 	const cursorTypeCheck: A.Equals<
-		(typeof result)['cursorKey'],
+		(typeof result)['LastEvaluatedKey'],
 		{ pk: string; sk: string; gsi0Pk: string; gsi0Sk: string } | undefined
 	> = 1;
 
 	expect(cursorTypeCheck).toBe(1);
 
-	expect(result.items.length).toBe(10);
+	expect(result.Items.length).toBe(10);
 });
 
 it('limits and pages correctly', async () => {
 	const result = await scanTableItems(ScanTable, {
-		pageLimit: 5
+		PageLimit: 5
 	});
 
-	expect(result.items.length).toBe(5);
-	expect(result.cursorKey).toBeDefined();
+	expect(result.Items.length).toBe(5);
+	expect(result.LastEvaluatedKey).toBeDefined();
 
 	const result2 = await scanTableItems(ScanTable, {
-		cursorKey: result.cursorKey
+		ExclusiveStartKey: result.LastEvaluatedKey
 	});
 
-	expect(result2.items.length).toBe(5);
-	expect(result2.cursorKey).toBeUndefined();
+	expect(result2.Items.length).toBe(5);
+	expect(result2.LastEvaluatedKey).toBeUndefined();
 });

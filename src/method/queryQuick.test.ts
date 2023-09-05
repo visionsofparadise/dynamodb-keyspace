@@ -25,14 +25,14 @@ it('query returns list of items', async () => {
 	}
 
 	const result = await queryQuickItems(ManyGsiKeySpace, {
-		hashKeyParams: { string }
+		HashKeyParams: { string }
 	});
 
-	const itemsTypeCheck: A.Equals<(typeof result)['items'], Array<TestItem>> = 1;
+	const itemsTypeCheck: A.Equals<(typeof result)['Items'], Array<TestItem>> = 1;
 
 	expect(itemsTypeCheck).toBe(1);
 
-	expect(result.items.length).toBe(10);
+	expect(result.Items.length).toBe(10);
 });
 
 it('queries items with beginsWith on index key', async () => {
@@ -55,12 +55,12 @@ it('queries items with beginsWith on index key', async () => {
 	}
 
 	const result = await queryQuickItems(ManyGsiKeySpace, {
-		index: 'gsi0' as const,
-		hashKeyParams: { number: 200 },
-		beginsWith: string
+		IndexName: 'gsi0' as const,
+		HashKeyParams: { number: 200 },
+		BeginsWith: string
 	});
 
-	expect(result.items.length).toBe(1);
+	expect(result.Items.length).toBe(1);
 });
 
 it('queries items with between on index key', async () => {
@@ -83,13 +83,13 @@ it('queries items with between on index key', async () => {
 	}
 
 	const result = await queryQuickItems(ManyGsiKeySpace, {
-		index: 'gsi2' as const,
-		hashKeyParams: { string },
-		greaterThan: 198,
-		lessThan: 204
+		IndexName: 'gsi2' as const,
+		HashKeyParams: { string },
+		GreaterThan: 198,
+		LessThan: 204
 	});
 
-	expect(result.items.length).toBe(7);
+	expect(result.Items.length).toBe(7);
 });
 
 it('gets hashKey params for primary index on no index defined and index', async () => {
@@ -121,17 +121,17 @@ it('gets hashKey params for primary index on no index defined and index', async 
 	const number2 = randomNumber();
 
 	await queryQuickItems(DifferentParamsKeySpace, {
-		hashKeyParams: { string1 }
+		HashKeyParams: { string1 }
 	});
 
 	await queryQuickItems(DifferentParamsKeySpace, {
-		index: 'gsi0' as const,
-		hashKeyParams: { number2 }
+		IndexName: 'gsi0' as const,
+		HashKeyParams: { number2 }
 	});
 
 	await queryQuickItems(DifferentParamsKeySpace, {
-		index: 'gsi1' as const,
-		hashKeyParams: undefined
+		IndexName: 'gsi1' as const,
+		HashKeyParams: undefined
 	});
 
 	expect(true).toBe(true);

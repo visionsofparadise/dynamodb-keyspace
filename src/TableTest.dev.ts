@@ -16,7 +16,11 @@ export const Client =
 				}
 		  });
 
-export const DocumentClient = DynamoDBDocumentClient.from(Client);
+export const DocumentClient = DynamoDBDocumentClient.from(Client, {
+	marshallOptions: {
+		removeUndefinedValues: true
+	}
+});
 
 export const NoGsiTable = new Table({
 	client: DocumentClient,

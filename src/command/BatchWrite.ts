@@ -1,10 +1,10 @@
 import { BatchWriteCommand, BatchWriteCommandInput, BatchWriteCommandOutput } from '@aws-sdk/lib-dynamodb';
 import { DkCommand } from './Command';
 import { GenericAttributes } from '../util/utils';
-import { UncapitalizeKeys, uncapitalizeKeys, capitalizeKeys } from 'object-key-casing';
 import { applyDefaults } from '../util/defaults';
 import { DkClientConfig } from '../Client';
 import { executeMiddlewares, executeMiddleware } from '../Middleware';
+import { DeleteRequest, PutRequest } from '@aws-sdk/client-dynamodb';
 
 const BATCH_WRITE_COMMAND_INPUT_DATA_TYPE = 'BatchWriteCommandInput' as const;
 const BATCH_WRITE_COMMAND_INPUT_HOOK = [
@@ -23,15 +23,27 @@ const BATCH_WRITE_COMMAND_OUTPUT_HOOK = [
 export interface DkBatchWriteCommandInput<
 	Attributes extends GenericAttributes = GenericAttributes,
 	Key extends GenericAttributes = GenericAttributes
-> extends UncapitalizeKeys<Omit<BatchWriteCommandInput, 'RequestItems'>> {
-	requests: Record<string, Array<{ put: Attributes } | { delete: Key }>>;
+> extends Omit<BatchWriteCommandInput, 'RequestItems'> {
+	RequestItems: Record<
+		string,
+		Array<
+			| { PutRequest: Omit<PutRequest, 'Item'> & { Item: Attributes } }
+			| { DeleteRequest: Omit<DeleteRequest, 'Key'> & { Key: Key } }
+		>
+	>;
 }
 
 export interface DkBatchWriteCommandOutput<
 	Attributes extends GenericAttributes = GenericAttributes,
 	Key extends GenericAttributes = GenericAttributes
-> extends UncapitalizeKeys<Omit<BatchWriteCommandOutput, 'UnprocessedItems'>> {
-	unprocessedRequests: Record<string, Array<{ put: Attributes } | { delete: Key }>>;
+> extends Omit<BatchWriteCommandOutput, 'UnprocessedItems'> {
+	UnprocessedItems: Record<
+		string,
+		Array<
+			| { PutRequest: Omit<PutRequest, 'Item'> & { Item: Attributes } }
+			| { DeleteRequest: Omit<DeleteRequest, 'Key'> & { Key: Key } }
+		>
+	>;
 }
 
 export class DkBatchWriteCommand<
@@ -56,8 +68,8 @@ export class DkBatchWriteCommand<
 
 	handleInput = async ({ defaults, middleware }: DkClientConfig): Promise<BatchWriteCommandInput> => {
 		const postDefaultsInput = applyDefaults(this.input, defaults, [
-			'returnConsumedCapacity',
-			'returnItemCollectionMetrics'
+			'ReturnConsumedCapacity',
+			'ReturnItemCollectionMetrics'
 		]);
 
 		const { data: postMiddlewareInput } = await executeMiddlewares(
@@ -69,96 +81,38 @@ export class DkBatchWriteCommand<
 			middleware
 		);
 
-		const { requests, ...rest } = postMiddlewareInput;
-
-		const formattedInput = {
-			requestItems: Object.fromEntries(
-				Object.entries(requests).map(([tableName, requests]) => {
-					const formattedRequests = requests.map(request => {
-						if ('put' in request) {
-							return {
-								PutRequest: {
-									Item: request.put
-								}
-							};
-						}
-
-						return {
-							DeleteRequest: {
-								Key: request.delete
-							}
-						};
-					});
-
-					return [tableName, formattedRequests];
-				})
-			),
-			...rest
-		};
-
-		const upperCaseInput = capitalizeKeys(formattedInput);
-
-		return upperCaseInput;
+		return postMiddlewareInput;
 	};
 
 	handleOutput = async (
 		output: BatchWriteCommandOutput,
 		{ middleware }: DkClientConfig
 	): Promise<DkBatchWriteCommandOutput<Attributes, Key>> => {
-		const lowerCaseOutput = uncapitalizeKeys(output);
-
-		const { unprocessedItems, ...rest } = lowerCaseOutput;
-
-		const formattedUnprocessedRequests = Object.fromEntries(
-			Object.entries(unprocessedItems || {}).map(([tableName, requests]) => {
-				const formattedRequests = requests.map(request => {
-					if (request.PutRequest) {
-						const item = request.PutRequest.Item as Attributes;
-
-						return {
-							put: item
-						};
-					}
-
-					const key = request.DeleteRequest?.Key as Key;
-
-					return {
-						delete: key
-					};
-				});
-
-				return [tableName, formattedRequests];
-			})
-		);
-
-		const formattedOutput: DkBatchWriteCommandOutput<Attributes, Key> = {
-			...rest,
-			unprocessedRequests: formattedUnprocessedRequests
-		};
+		const typedOutput = output as DkBatchWriteCommandOutput<Attributes, Key>;
 
 		const { data: postMiddlewareOutput } = await executeMiddlewares(
 			[...this.outputMiddlewareConfig.hooks],
 			{
 				dataType: this.outputMiddlewareConfig.dataType,
-				data: formattedOutput
+				data: typedOutput
 			},
 			middleware
 		);
 
-		if (postMiddlewareOutput.consumedCapacity) {
-			for (const consumedCapacity of postMiddlewareOutput.consumedCapacity) {
+		if (postMiddlewareOutput.ConsumedCapacity) {
+			for (const ConsumedCapacity of postMiddlewareOutput.ConsumedCapacity) {
 				await executeMiddleware(
 					'ConsumedCapacity',
-					{ dataType: 'ConsumedCapacity', data: consumedCapacity },
+					{ dataType: 'ConsumedCapacity', data: ConsumedCapacity },
 					middleware
 				);
 			}
 		}
 
-		if (postMiddlewareOutput.itemCollectionMetrics) {
+		if (postMiddlewareOutput.ItemCollectionMetrics) {
 			await executeMiddleware(
 				'ItemCollectionMetrics',
-				{ dataType: 'ItemCollectionMetrics', data: postMiddlewareOutput.itemCollectionMetrics },
+				{ dataType: 'ItemCollectionMetrics', data: postMiddlewareOutput.ItemCollectionMetrics },
 				middleware
 			);
 		}

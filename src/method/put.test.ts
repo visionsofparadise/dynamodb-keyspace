@@ -51,7 +51,7 @@ it('returns old values', async () => {
 	};
 
 	const result = await putItem(NoGsiKeySpace, updatedItem, {
-		returnValues: ReturnValue.ALL_OLD
+		ReturnValues: ReturnValue.ALL_OLD
 	});
 
 	const resultTypeCheck: A.Equals<typeof result, KeySpace.GetAttributes<typeof NoGsiKeySpace>> = 1;

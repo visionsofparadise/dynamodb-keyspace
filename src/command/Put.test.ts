@@ -9,29 +9,29 @@ import { DkPutCommand } from './Put';
 it('puts new item', async () => {
 	const string = randomString();
 
-	const item = {
+	const Item = {
 		pk: string,
 		sk: string
 	};
 
 	const result = await TestClient.send(
 		new DkPutCommand({
-			tableName: TABLE_NAME,
-			item
+			TableName: TABLE_NAME,
+			Item
 		})
 	);
 
-	const resultTypeCheck: A.Equals<(typeof result)['attributes'], undefined> = 1;
+	const resultTypeCheck: A.Equals<(typeof result)['Attributes'], undefined> = 1;
 
 	expect(resultTypeCheck).toBe(1);
 
-	expect(result.attributes).toBeUndefined();
+	expect(result.Attributes).toBeUndefined();
 });
 
 it('puts over existing item', async () => {
 	const string = randomString();
 
-	const item = {
+	const Item = {
 		pk: string,
 		sk: string
 	};
@@ -39,28 +39,28 @@ it('puts over existing item', async () => {
 	await DocumentClient.send(
 		new PutCommand({
 			TableName: TABLE_NAME,
-			Item: item
+			Item
 		})
 	);
 
 	const result = await TestClient.send(
 		new DkPutCommand({
-			tableName: TABLE_NAME,
-			item
+			TableName: TABLE_NAME,
+			Item
 		})
 	);
 
-	const resultTypeCheck: A.Equals<(typeof result)['attributes'], undefined> = 1;
+	const resultTypeCheck: A.Equals<(typeof result)['Attributes'], undefined> = 1;
 
 	expect(resultTypeCheck).toBe(1);
 
-	expect(result.attributes).toBeUndefined();
+	expect(result.Attributes).toBeUndefined();
 });
 
 it('returns old values', async () => {
 	const string = randomString();
 
-	const item = {
+	const Item = {
 		pk: string,
 		sk: string
 	};
@@ -68,26 +68,26 @@ it('returns old values', async () => {
 	await DocumentClient.send(
 		new PutCommand({
 			TableName: TABLE_NAME,
-			Item: item
+			Item
 		})
 	);
 
 	const updatedItem = {
-		...item,
+		...Item,
 		string: randomString()
 	};
 
 	const result = await TestClient.send(
 		new DkPutCommand({
-			tableName: TABLE_NAME,
-			item: updatedItem,
-			returnValues: ReturnValue.ALL_OLD
+			TableName: TABLE_NAME,
+			Item: updatedItem,
+			ReturnValues: ReturnValue.ALL_OLD
 		})
 	);
 
-	const resultTypeCheck: A.Equals<(typeof result)['attributes'], typeof updatedItem> = 1;
+	const resultTypeCheck: A.Equals<(typeof result)['Attributes'], typeof updatedItem> = 1;
 
 	expect(resultTypeCheck).toBe(1);
 
-	expect(result.attributes).toStrictEqual(item);
+	expect(result.Attributes).toStrictEqual(Item);
 });

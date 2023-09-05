@@ -7,7 +7,7 @@ import { Table } from '../Table';
 import { DkClient } from '../Client';
 
 export interface UpdateItemInput<RV extends ReturnValue | undefined = typeof ReturnValue.ALL_NEW>
-	extends Omit<DkUpdateCommandInput<any, RV>, 'tableName' | 'key'> {}
+	extends Omit<DkUpdateCommandInput<any, RV>, 'TableName' | 'Key'> {}
 
 export type UpdateItemOutput<
 	Attributes extends GenericAttributes = GenericAttributes,
@@ -26,13 +26,13 @@ export const updateTableItem = async <
 	const output = await dkClient.send(
 		new DkUpdateCommand<Table.GetAttributes<T>, Table.GetIndexKey<T, T['primaryIndex']>, RV>({
 			...input,
-			tableName: Table.tableName,
-			key,
-			returnValues: (input.returnValues || ReturnValue.ALL_NEW) as RV
+			TableName: Table.name,
+			Key: key,
+			ReturnValues: (input.ReturnValues || ReturnValue.ALL_NEW) as RV
 		})
 	);
 
-	return output.attributes;
+	return output.Attributes;
 };
 
 export const updateItem = async <

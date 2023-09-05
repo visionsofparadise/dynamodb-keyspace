@@ -1,7 +1,6 @@
 import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
-import { U, A } from 'ts-toolbelt';
 import { DkClient, DkClientConfig } from './Client';
-import { GenericAttributes, Remap } from './util/utils';
+import { Cast, GenericAttributes, IntersectOf, Remap } from './util/utils';
 import { KeySpace } from './KeySpace';
 
 export const primaryIndex = 'primaryIndex' as const;
@@ -51,17 +50,17 @@ export namespace Table {
 	export type GetIndexKey<
 		T extends Table,
 		Index extends T['indexes'][number] | never | undefined = T['indexes'][number]
-	> = Remap<U.IntersectOf<Table.GetIndexKeyMap<T>[Exclude<Index, never | undefined>]>>;
+	> = Remap<IntersectOf<Table.GetIndexKeyMap<T>[Exclude<Index, never | undefined>]>>;
 
 	export type GetIndexCursorKey<
 		T extends Table,
 		Index extends T['secondaryIndexes'][number] | never | undefined
-	> = Remap<A.Cast<Table.GetIndexKey<T, T['primaryIndex'] | Index>, Table.GetIndexKey<T, T['primaryIndex']>>>;
+	> = Remap<Cast<Table.GetIndexKey<T, T['primaryIndex'] | Index>, Table.GetIndexKey<T, T['primaryIndex']>>>;
 
 	export type GetAttributes<T extends Table> = Remap<
 		T['secondaryIndexes'][number] extends string
 			? Table.GetIndexKeyMap<T>[T['primaryIndex']] &
-					Partial<U.IntersectOf<Table.GetIndexKeyMap<T>[T['secondaryIndexes'][number]]>>
+					Partial<IntersectOf<Table.GetIndexKeyMap<T>[T['secondaryIndexes'][number]]>>
 			: Table.GetIndexKeyMap<T>[T['primaryIndex']]
 	>;
 }
@@ -139,7 +138,7 @@ export class Table<
 	client: DynamoDBDocumentClient;
 	dkClient: DkClient;
 
-	tableName: string;
+	name: string;
 
 	constructor(public config: Config) {
 		this.client = config.client;
@@ -148,7 +147,7 @@ export class Table<
 		this.dkClient.setDefaults(this.config.defaults);
 		this.dkClient.setMiddleware(this.config.middleware);
 
-		this.tableName = this.config.name;
+		this.name = this.config.name;
 	}
 
 	configure<

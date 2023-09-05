@@ -6,7 +6,7 @@ import { ListParams } from './query';
 export interface ScanItemsInput<
 	Index extends string | never = never,
 	CursorKey extends GenericAttributes = GenericAttributes
-> extends Omit<DkScanCommandInput<CursorKey>, 'tableName' | 'index' | 'limit' | 'scanIndexForward'>,
+> extends Omit<DkScanCommandInput<CursorKey>, 'TableName' | 'IndexName'>,
 		ListParams<Index> {}
 
 export type ScanItemsOutput<
@@ -25,40 +25,40 @@ export const scanTableItems = async <
 		totalCount: number,
 		pageCursorKey?: Table.GetIndexCursorKey<T, Index>
 	): Promise<ScanItemsOutput<Table.GetAttributes<T>, Table.GetIndexCursorKey<T, Index>>> => {
-		const { autoPage, pageLimit, totalLimit, ...inputRest } =
+		const { AutoPage, PageLimit, Limit, ...inputRest } =
 			input || ({} as ScanItemsInput<Index, Table.GetIndexCursorKey<T, Index>>);
 
 		const output = await Table.dkClient.send(
 			new DkScanCommand<Table.GetAttributes<T>, Table.GetIndexCursorKey<T, Index>>({
 				...inputRest,
-				tableName: Table.tableName,
-				cursorKey: pageCursorKey,
-				limit: pageLimit
+				TableName: Table.name,
+				ExclusiveStartKey: pageCursorKey,
+				Limit: PageLimit
 			})
 		);
 
-		const { items, cursorKey, count = 0, ...rest } = output;
+		const { Items, LastEvaluatedKey, Count = 0, ...rest } = output;
 
-		const newTotalCount = totalCount + items.length;
+		const newTotalCount = totalCount + Items.length;
 
-		if (!autoPage || !cursorKey || (totalLimit && newTotalCount >= totalLimit)) {
+		if (!AutoPage || !LastEvaluatedKey || (Limit && newTotalCount >= Limit)) {
 			return {
-				items: items.slice(0, totalLimit),
-				cursorKey,
-				count,
+				Items: Items.slice(0, Limit),
+				LastEvaluatedKey,
+				Count,
 				...rest
 			};
 		}
 
-		const nextPage = await recurse(newTotalCount, cursorKey);
+		const nextPage = await recurse(newTotalCount, LastEvaluatedKey);
 
 		return {
-			items: [...items, ...nextPage.items].slice(0, totalLimit),
-			cursorKey: nextPage.cursorKey,
-			count: count + (nextPage.count || 0),
+			Items: [...Items, ...nextPage.Items].slice(0, Limit),
+			LastEvaluatedKey: nextPage.LastEvaluatedKey,
+			Count: Count + (nextPage.Count || 0),
 			...rest
 		};
 	};
 
-	return recurse(0, input?.cursorKey);
+	return recurse(0, input?.ExclusiveStartKey);
 };

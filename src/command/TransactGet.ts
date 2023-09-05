@@ -1,7 +1,6 @@
 import { TransactGetCommand, TransactGetCommandInput, TransactGetCommandOutput } from '@aws-sdk/lib-dynamodb';
 import { DkCommand } from './Command';
 import { GenericAttributes } from '../util/utils';
-import { UncapitalizeKeys, uncapitalizeKeys, capitalizeKeys } from 'object-key-casing';
 import { applyDefaults } from '../util/defaults';
 import { DkClientConfig } from '../Client';
 import { executeMiddlewares, executeMiddleware } from '../Middleware';
@@ -22,15 +21,17 @@ const TRANSACT_GET_COMMAND_OUTPUT_HOOK = [
 ] as const;
 
 export interface DkTransactGetCommandInput<Key extends GenericAttributes = GenericAttributes>
-	extends UncapitalizeKeys<Omit<TransactGetCommandInput, 'TransactItems'>> {
-	requests: (UncapitalizeKeys<Omit<Get, 'Key'>> & {
-		key: Key;
-	})[];
+	extends Omit<TransactGetCommandInput, 'TransactItems'> {
+	TransactItems: {
+		Get: Omit<Get, 'Key'> & {
+			Key: Key;
+		};
+	}[];
 }
 
 export interface DkTransactGetCommandOutput<Attributes extends GenericAttributes = GenericAttributes>
-	extends UncapitalizeKeys<Omit<TransactGetCommandOutput, 'Responses'>> {
-	items: Array<Attributes>;
+	extends Omit<TransactGetCommandOutput, 'Responses'> {
+	Responses: Array<Attributes>;
 }
 
 export class DkTransactGetCommand<
@@ -54,7 +55,7 @@ export class DkTransactGetCommand<
 	outputMiddlewareConfig = { dataType: TRANSACT_GET_COMMAND_OUTPUT_DATA_TYPE, hooks: TRANSACT_GET_COMMAND_OUTPUT_HOOK };
 
 	handleInput = async ({ defaults, middleware }: DkClientConfig): Promise<TransactGetCommandInput> => {
-		const postDefaultsInput = applyDefaults(this.input, defaults, ['returnConsumedCapacity']);
+		const postDefaultsInput = applyDefaults(this.input, defaults, ['ReturnConsumedCapacity']);
 
 		const { data: postMiddlewareInput } = await executeMiddlewares(
 			[...this.inputMiddlewareConfig.hooks],
@@ -65,49 +66,26 @@ export class DkTransactGetCommand<
 			middleware
 		);
 
-		const { requests, ...rest } = postMiddlewareInput;
-
-		const formattedInput = {
-			transactItems: requests.map(request => ({ Get: capitalizeKeys(request) })),
-			...rest
-		};
-
-		const upperCaseInput = capitalizeKeys(formattedInput);
-
-		return upperCaseInput;
+		return postMiddlewareInput;
 	};
 
 	handleOutput = async (
 		output: TransactGetCommandOutput,
 		{ middleware }: DkClientConfig
 	): Promise<DkTransactGetCommandOutput<Attributes>> => {
-		const lowerCaseOutput = uncapitalizeKeys(output);
-
-		const { responses, ...rest } = lowerCaseOutput;
-
-		const items =
-			responses
-				?.map(response => {
-					return response.Item as Attributes;
-				})
-				.filter((item): item is NonNullable<typeof item> => !!item) || [];
-
-		const formattedOutput: DkTransactGetCommandOutput<Attributes> = {
-			...rest,
-			items
-		};
+		const typedOutput = output as DkTransactGetCommandOutput<Attributes>;
 
 		const { data: postMiddlewareOutput } = await executeMiddlewares(
 			[...this.outputMiddlewareConfig.hooks],
 			{
 				dataType: this.outputMiddlewareConfig.dataType,
-				data: formattedOutput
+				data: typedOutput
 			},
 			middleware
 		);
 
-		if (postMiddlewareOutput.consumedCapacity) {
-			for (const consumedCapacity of postMiddlewareOutput.consumedCapacity) {
+		if (postMiddlewareOutput.ConsumedCapacity) {
+			for (const consumedCapacity of postMiddlewareOutput.ConsumedCapacity) {
 				await executeMiddleware(
 					'ConsumedCapacity',
 					{ dataType: 'ConsumedCapacity', data: consumedCapacity },
